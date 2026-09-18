@@ -1,15 +1,47 @@
-## macOS
-.DS_Store
-
-## Xcode
-build/
-DerivedData/
-*.xcuserstate
+# ---------- Xcode / iOS ----------
 xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+DerivedData/
+build/
+*.moved-aside
 *.hmap
 *.ipa
-*.dSYM
 *.dSYM.zip
+*.dSYM
 
-## Swift Package Manager
+# Swift Package Manager
+.swiftpm/
 .build/
+Packages/
+
+# CocoaPods / Carthage (por si se agregan más adelante)
+Pods/
+Carthage/Build/
+
+# ---------- macOS ----------
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+
+# ---------- Python / API ----------
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Variables de entorno: nunca se suben (usa .env.example como plantilla)
+.env
+.env.*
+!.env.example
+
+# ---------- Editores ----------
+.vscode/
+.idea/

@@ -1,0 +1,12 @@
+# Normalización de saltos de línea
+* text=auto eol=lf
+
+# El proyecto de Xcode genera conflictos constantes: se fusiona por unión
+# y GitHub lo trata como JSON para que el diff sea legible.
+*.pbxproj merge=union linguist-language=JSON
+
+# Archivos binarios que Git no debe intentar fusionar
+*.xcworkspacedata merge=union
+*.png binary
+*.jpg binary
+*.pdf binary

@@ -1,0 +1,43 @@
+# CODEOWNERS — Sistema de Ingresos, Cáritas de Monterrey A.B.P.
+#
+# Cada línea asigna a la persona dueña de esa carpeta. GitHub la pide
+# automáticamente como revisora cuando alguien toca sus archivos.
+#
+# Sustituye los placeholders (@usuario-github-*) por los usuarios reales
+# de GitHub de cada integrante antes de la primera semana de trabajo.
+
+# ---------- Archivos compartidos: los revisa TODO el equipo ----------
+/README.md                                     @usuario-github-persona1 @usuario-github-persona2 @usuario-github-persona3 @usuario-github-persona4 @usuario-github-persona5
+/.gitignore                                    @usuario-github-persona1 @usuario-github-persona2 @usuario-github-persona3 @usuario-github-persona4 @usuario-github-persona5
+/.gitattributes                                @usuario-github-persona1 @usuario-github-persona2 @usuario-github-persona3 @usuario-github-persona4 @usuario-github-persona5
+/.github/CODEOWNERS                            @usuario-github-persona1 @usuario-github-persona2 @usuario-github-persona3 @usuario-github-persona4 @usuario-github-persona5
+/ios/SistemaIngresos/App/                      @usuario-github-persona1 @usuario-github-persona2 @usuario-github-persona3 @usuario-github-persona4 @usuario-github-persona5
+/ios/SistemaIngresos/Core/                     @usuario-github-persona1 @usuario-github-persona2 @usuario-github-persona3 @usuario-github-persona4 @usuario-github-persona5
+/api/main.py                                   @usuario-github-persona1 @usuario-github-persona2 @usuario-github-persona3 @usuario-github-persona4 @usuario-github-persona5
+/api/core/                                     @usuario-github-persona1 @usuario-github-persona2 @usuario-github-persona3 @usuario-github-persona4 @usuario-github-persona5
+/api/models/                                   @usuario-github-persona1 @usuario-github-persona2 @usuario-github-persona3 @usuario-github-persona4 @usuario-github-persona5
+/api/requirements.txt                          @usuario-github-persona1 @usuario-github-persona2 @usuario-github-persona3 @usuario-github-persona4 @usuario-github-persona5
+
+# ---------- Prototipo ya entregado: no se modifica ----------
+/Entrega1/                                     @usuario-github-persona1 @usuario-github-persona2 @usuario-github-persona3 @usuario-github-persona4 @usuario-github-persona5
+
+# ---------- Persona 1 · Login + Perfil ----------
+/ios/SistemaIngresos/Features/Login/           @usuario-github-persona1
+/api/routers/auth.py                           @usuario-github-persona1
+/api/core/auth.py                              @usuario-github-persona1
+
+# ---------- Persona 2 · Resumen ----------
+/ios/SistemaIngresos/Features/Resumen/         @usuario-github-persona2
+/api/routers/resumen.py                        @usuario-github-persona2
+
+# ---------- Persona 3 · Donantes ----------
+/ios/SistemaIngresos/Features/Donantes/        @usuario-github-persona3
+/api/routers/donantes.py                       @usuario-github-persona3
+
+# ---------- Persona 4 · Reportes ----------
+/ios/SistemaIngresos/Features/Reportes/        @usuario-github-persona4
+/api/routers/reportes.py                       @usuario-github-persona4
+
+# ---------- Persona 5 · Metas ----------
+/ios/SistemaIngresos/Features/Metas/           @usuario-github-persona5
+/api/routers/metas.py                          @usuario-github-persona5
