@@ -1,15 +1,15 @@
-"""Router de acceso y perfil.
+"""Blueprint de acceso y perfil.
 
 Dueño: Persona 1 (Login + Perfil).
 """
 
-from fastapi import APIRouter
+from flask import Blueprint, jsonify
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 
-@router.get("/usuarios")
-def listar_usuarios() -> list:
+@bp.get("/usuarios")
+def listar_usuarios():
     """Listado de usuarios del sistema."""
     # TODO (Persona 1): consultar SQL Server y devolver los usuarios.
-    return []
+    return jsonify([])

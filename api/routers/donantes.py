@@ -1,15 +1,15 @@
-"""Router de donantes (listado, ficha, pagos y llamadas).
+"""Blueprint de donantes (listado, ficha, pagos y llamadas).
 
 Dueño: Persona 3 (Donantes).
 """
 
-from fastapi import APIRouter
+from flask import Blueprint, jsonify
 
-router = APIRouter(prefix="/donantes", tags=["donantes"])
+bp = Blueprint("donantes", __name__, url_prefix="/donantes")
 
 
-@router.get("")
-def listar_donantes() -> list:
+@bp.get("")
+def listar_donantes():
     """Listado de donantes filtrable por segmento y estado."""
     # TODO (Persona 3): consultar SQL Server y aplicar los filtros.
-    return []
+    return jsonify([])

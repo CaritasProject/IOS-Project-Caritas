@@ -1,15 +1,15 @@
-"""Router de metas (avance por línea estratégica).
+"""Blueprint de metas (avance por línea estratégica).
 
 Dueño: Persona 5 (Metas).
 """
 
-from fastapi import APIRouter
+from flask import Blueprint, jsonify
 
-router = APIRouter(prefix="/metas", tags=["metas"])
+bp = Blueprint("metas", __name__, url_prefix="/metas")
 
 
-@router.get("")
-def listar_metas() -> list:
+@bp.get("")
+def listar_metas():
     """Metas del periodo y su avance."""
     # TODO (Persona 5): consultar SQL Server y devolver las metas del periodo.
-    return []
+    return jsonify([])

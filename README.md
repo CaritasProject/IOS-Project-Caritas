@@ -22,7 +22,7 @@ base de datos: todo pasa por la API.
 ```
 ┌────────────────────────┐    HTTP/JSON     ┌────────────────────┐      ODBC      ┌────────────┐
 │   App iOS (SwiftUI)    │ ───────────────► │  API REST (Python) │ ─────────────► │ SQL Server │
-│   iPad Pro horizontal  │ ◄─────────────── │      FastAPI       │ ◄───────────── │            │
+│   iPad Pro horizontal  │ ◄─────────────── │       Flask        │ ◄───────────── │            │
 └────────────────────────┘                  └────────────────────┘                └────────────┘
 ```
 
@@ -54,25 +54,30 @@ El dato baja siempre por el mismo camino y **nunca se salta un nivel**:
 ### 1.3 Capas de la API
 
 ```
-   routers/     Un APIRouter por pantalla. Define rutas, valida entrada y
-     │          devuelve modelos Pydantic.
+   routers/     Un Blueprint de Flask por pantalla, con su propio url_prefix.
+     │          Define rutas, valida entrada y devuelve JSON.
      ▼
    models/      Esquemas Pydantic: el contrato con la app iOS.
      │
      ▼
-   core/        db.py     → conexión a SQL Server (dependencia por petición)
-                auth.py   → JWT y usuario actual
+   core/        db.py     → conexión a SQL Server (una por petición, en `g`)
+                auth.py   → JWT y el decorador `requiere_sesion`
                 config.py → lee el .env
 ```
 
-`main.py` solo crea la app y registra los cinco routers con `include_router`.
-No contiene lógica: si estás escribiendo reglas de negocio ahí, van en tu router.
+`main.py` expone la fábrica `crear_app()`: arma la aplicación y registra los
+cinco blueprints con `register_blueprint`. No contiene lógica: si estás
+escribiendo reglas de negocio ahí, van en tu blueprint.
+
+> La carpeta se sigue llamando `routers/` (así aparece en `CODEOWNERS` y en el
+> reparto), pero lo que vive dentro son Blueprints de Flask. Cada archivo expone
+> su blueprint con el nombre `bp`.
 
 ### 1.4 Correspondencia pantalla ↔ endpoint
 
 Cada pantalla consume su propio prefijo. Así nadie pisa el trabajo de otro:
 
-| Pantalla iOS | Servicio iOS | Prefijo API | Router |
+| Pantalla iOS | Servicio iOS | Prefijo API | Blueprint |
 |---|---|---|---|
 | Login + Perfil | `LoginService` | `/auth` | `routers/auth.py` |
 | Resumen | `ResumenService` | `/resumen` | `routers/resumen.py` |
@@ -109,12 +114,12 @@ ios/SistemaIngresos/
     Metas/      Views/ Components/ Services/                     <- Persona 5
 
 api/
-  main.py            registra los 5 routers                      <- COMPARTIDO
+  main.py            crear_app() y los 5 blueprints              <- COMPARTIDO
   requirements.txt                                               <- COMPARTIDO
   .env.example       plantilla de conexión (sin valores reales)
   core/              db.py, auth.py, config.py                   <- COMPARTIDO
   models/            donante.py, usuario.py, meta.py             <- COMPARTIDO
-  routers/           auth, resumen, donantes, reportes, metas    <- uno por persona
+  routers/           blueprints: auth, resumen, donantes, ...    <- uno por persona
 ```
 
 ---
@@ -124,7 +129,7 @@ api/
 Cada integrante es dueño de **una pantalla** y de **los endpoints que esa
 pantalla necesita**. Nadie más toca esos archivos.
 
-| Persona | Pantalla | Carpeta iOS | Router API |
+| Persona | Pantalla | Carpeta iOS | Blueprint API |
 |---|---|---|---|
 | Persona 1 | Login + Perfil | `ios/SistemaIngresos/Features/Login/` | `api/routers/auth.py` (y `api/core/auth.py`) |
 | Persona 2 | Resumen | `ios/SistemaIngresos/Features/Resumen/` | `api/routers/resumen.py` |
@@ -155,7 +160,7 @@ de hacer merge. Un cambio silencioso aquí rompe el trabajo de los otros cuatro.
 
 **API**
 
-- `api/main.py` — crea la app y registra los 5 routers.
+- `api/main.py` — `crear_app()` y el registro de los 5 blueprints.
 - `api/core/` — `db.py`, `auth.py`, `config.py`.
 - `api/models/` — `donante.py`, `usuario.py`, `meta.py`.
 - `api/requirements.txt`.
@@ -201,9 +206,13 @@ en `CODEOWNERS`.
 
 **Python / API**
 
-- Un `APIRouter` por pantalla, con su `prefix` y su `tag`.
+- Un `Blueprint` por pantalla, con su `url_prefix`, exportado como `bp`.
 - Los esquemas de entrada y salida son modelos Pydantic en `models/`.
-- La conexión a SQL Server se obtiene siempre desde `core/db.py`.
+- Devuelve JSON con `jsonify(...)`; nada de `render_template`: esto es una API.
+- La conexión a SQL Server se obtiene siempre desde `core/db.py` (vive en `g`
+  y se cierra sola al terminar la petición). Nunca abras `pyodbc.connect` en
+  una ruta.
+- Las rutas que requieren sesión llevan el decorador `@requiere_sesion`.
 - Las credenciales van en `.env` (nunca en el código; ver `.env.example`).
 
 ---
@@ -218,10 +227,11 @@ python -m venv venv
 venv\Scripts\activate        # Windows
 pip install -r requirements.txt
 copy .env.example .env       # y llena los valores reales
-uvicorn main:app --reload
+flask --app main run --debug
 ```
 
-Documentación interactiva: <http://localhost:8000/docs>
+La API queda en <http://localhost:5000>; para comprobar que responde:
+<http://localhost:5000/salud>
 
 **iOS**
 

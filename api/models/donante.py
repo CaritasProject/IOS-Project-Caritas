@@ -1,6 +1,6 @@
 """Esquemas del donante — ARCHIVO COMPARTIDO.
 
-Los consumen los routers de donantes, resumen y reportes.
+Los consumen los blueprints de donantes, resumen y reportes.
 Avisa al equipo antes de cambiar los campos.
 """
 

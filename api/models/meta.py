@@ -1,6 +1,6 @@
 """Esquemas de metas — ARCHIVO COMPARTIDO.
 
-Los consumen los routers de metas, resumen y reportes.
+Los consumen los blueprints de metas, resumen y reportes.
 """
 
 from decimal import Decimal
