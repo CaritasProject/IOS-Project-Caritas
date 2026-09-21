@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ReportesView: View {
+    // TODO: cargar con obtenerReportes() dentro de un Task.
     @State private var listaReportes = reportesDeMuestra()
 
     @State private var reporteSeleccionado: Reporte?

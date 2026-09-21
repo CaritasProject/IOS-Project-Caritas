@@ -37,6 +37,7 @@ struct ConfigurarReporteView: View {
                     .pickerStyle(.segmented)
                 }
 
+                // DatePicker no se vio en clase: es el control nativo de calendario.
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Rango de fechas")
                         .font(.headline)
@@ -162,6 +163,7 @@ struct ConfigurarReporteView: View {
             return
         }
 
+        // TODO: llamar a generarReporte(configuracion:) antes de continuar.
         mostrandoConfigurar = false
         mostrandoGenerado = true
     }

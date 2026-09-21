@@ -1,5 +1,6 @@
 import Foundation
 
+// TODO: en iPad fisico, cambiar localhost por la IP del backend.
 let urlBaseAPI = "http://localhost:5000"
 
 func obtenerReportes() async throws -> [Reporte] {
@@ -25,6 +26,7 @@ func obtenerReportes() async throws -> [Reporte] {
     return listaReportes
 }
 
+// TODO: sin usar todavia. Falta GET /reportes/<id> en Flask.
 func obtenerReporte(idReporte: Int) async throws -> Reporte {
     guard let url = URL(string: "\(urlBaseAPI)/reportes/\(idReporte)") else {
         print("URL incorrecto")
@@ -48,6 +50,7 @@ func obtenerReporte(idReporte: Int) async throws -> Reporte {
     return reporte
 }
 
+// TODO: sin usar todavia. Falta POST /reportes en Flask.
 func generarReporte(configuracion: ConfiguracionReporte) async throws -> Reporte {
     guard let url = URL(string: "\(urlBaseAPI)/reportes") else {
         print("URL incorrecto")
