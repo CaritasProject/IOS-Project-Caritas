@@ -37,6 +37,7 @@
 		F4615B37D0CDB40A6501E68D /* SemaforoRiesgo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90B36FD551FA0505A2F450A5 /* SemaforoRiesgo.swift */; };
 		F657BFF63EA63381F95D00D2 /* DetalleReporteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F46F6FB92DAF54335DD5811A /* DetalleReporteView.swift */; };
 		F6D454E57A9623836DF8572B /* ReporteRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35311DEC6086E3EF4B176D0C /* ReporteRow.swift */; };
+		D01100000000000000000001 /* DonanteRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D01100000000000000000002; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -71,6 +72,7 @@
 		F2D67EA10F4F0065922FE58C /* LoginService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LoginService.swift"; sourceTree = "<group>"; };
 		F44BE599383E8FDE422A06D1 /* Meta.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Meta.swift"; sourceTree = "<group>"; };
 		F46F6FB92DAF54335DD5811A /* DetalleReporteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DetalleReporteView.swift"; sourceTree = "<group>"; };
+		D01100000000000000000002 /* DonanteRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DonanteRow.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -171,6 +173,7 @@
 			isa = PBXGroup;
 			children = (
 				E134A5F7E584DBACCEF6B90A /* Services */,
+				D01100000000000000000003 /* Components */,
 				3C67BEA6DA54F8EC0F1C12C9 /* Views */,
 			);
 			path = "Donantes";
@@ -321,6 +324,7 @@
 			);
 			sourceTree = "<group>";
 		};
+		D01100000000000000000003 /* Components */ = {isa = PBXGroup; children = (D01100000000000000000002,); path = Components; sourceTree = "<group>"; };
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -398,6 +402,7 @@
 				5DBEFF3062FA3B67ACADA68B /* Donante.swift in Sources */,
 				49BB0CB8FB129BA0CFF8CFA7 /* DonantesService.swift in Sources */,
 				03236F1A61DFE827993BC4C0 /* DonantesView.swift in Sources */,
+				D01100000000000000000001 /* DonanteRow.swift in Sources */,
 				1526DCE301347EF20D8DC62F /* Donativo.swift in Sources */,
 				0745B5BCC14DCD68393DF2ED /* Formatos.swift in Sources */,
 				676B526BCE6BB718E6784327 /* LoginService.swift in Sources */,
@@ -556,6 +561,7 @@
 				DEVELOPMENT_ASSET_PATHS = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SistemaIngresos/App/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -583,6 +589,7 @@
 				DEVELOPMENT_ASSET_PATHS = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SistemaIngresos/App/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
