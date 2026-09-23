@@ -35,6 +35,8 @@
 		914AA8DE30642E71006526CE /* TarjetaTelemarketing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 914AA8D130642E71006526CE /* TarjetaTelemarketing.swift */; };
 		914AA8DF30642E71006526CE /* .gitkeep in Resources */ = {isa = PBXBuildFile; fileRef = 914AA8C530642E71006526CE /* .gitkeep */; };
 		914AA8E230642E76006526CE /* PaletaResumen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 914AA8E030642E76006526CE /* PaletaResumen.swift */; };
+		C1A0000000000002RESUMEN /* ResumenKPIs.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A0000000000001RESUMEN /* ResumenKPIs.swift */; };
+		C1A0000000000004RESUMEN /* FormatosResumen.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A0000000000003RESUMEN /* FormatosResumen.swift */; };
 		9347588957DB2C01F08AEE36 /* ConfigurarReporteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0291234F77EF2C72BFA88597 /* ConfigurarReporteView.swift */; };
 		95A1C02727D3E205038F0A8B /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D2757FF5F1CB495211EC331 /* ContentView.swift */; };
 		99E7E9D1E310F289F282BDEB /* MetasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CDD2C55FBD182A1332D8766 /* MetasView.swift */; };
@@ -88,6 +90,8 @@
 		914AA8D030642E71006526CE /* TarjetaPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TarjetaPanel.swift; sourceTree = "<group>"; };
 		914AA8D130642E71006526CE /* TarjetaTelemarketing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TarjetaTelemarketing.swift; sourceTree = "<group>"; };
 		914AA8E030642E76006526CE /* PaletaResumen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaletaResumen.swift; sourceTree = "<group>"; };
+		C1A0000000000001RESUMEN /* ResumenKPIs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResumenKPIs.swift; sourceTree = "<group>"; };
+		C1A0000000000003RESUMEN /* FormatosResumen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormatosResumen.swift; sourceTree = "<group>"; };
 		A05368894E3D4A3BD4A9E212 /* BotonPrimario.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BotonPrimario.swift; sourceTree = "<group>"; };
 		A7863602C6ABD9F9BD2C4562 /* DonantesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DonantesView.swift; sourceTree = "<group>"; };
 		A7B8EFB10C4021497743926F /* ResumenService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResumenService.swift; sourceTree = "<group>"; };
@@ -169,6 +173,7 @@
 				5CEECBDA6FF5C411E9540857 /* Views */,
 				914AA8D230642E71006526CE /* Components */,
 				914AA8E130642E76006526CE /* Utils */,
+				C1A0000000000005RESUMEN /* Model */,
 			);
 			path = Resumen;
 			sourceTree = "<group>";
@@ -234,10 +239,19 @@
 			path = Components;
 			sourceTree = "<group>";
 		};
+		C1A0000000000005RESUMEN /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				C1A0000000000001RESUMEN /* ResumenKPIs.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
 		914AA8E130642E76006526CE /* Utils */ = {
 			isa = PBXGroup;
 			children = (
 				914AA8E030642E76006526CE /* PaletaResumen.swift */,
+				C1A0000000000003RESUMEN /* FormatosResumen.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -495,6 +509,8 @@
 				1594746873D83D55C696ACE6 /* ReportesService.swift in Sources */,
 				E02650E5B2A9540966C8310F /* ReportesView.swift in Sources */,
 				914AA8E230642E76006526CE /* PaletaResumen.swift in Sources */,
+				C1A0000000000002RESUMEN /* ResumenKPIs.swift in Sources */,
+				C1A0000000000004RESUMEN /* FormatosResumen.swift in Sources */,
 				549A3B72EFBFC922E1A8F240 /* ResumenService.swift in Sources */,
 				E1C86DAC5D89E836B0E62B66 /* ResumenView.swift in Sources */,
 				F4615B37D0CDB40A6501E68D /* SemaforoRiesgo.swift in Sources */,
