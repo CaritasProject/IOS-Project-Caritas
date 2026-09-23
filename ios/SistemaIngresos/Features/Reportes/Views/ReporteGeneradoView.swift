@@ -29,7 +29,7 @@ struct ReporteGeneradoView: View {
                 .frame(maxWidth: 480)
 
             HStack(spacing: 14) {
-                BotonCompartirReporte(idReporte: reporte.id, destacado: true)
+                BotonCompartirReporte(reporte: reporte, destacado: true)
 
                 Button {
                     mostrandoGenerado = false

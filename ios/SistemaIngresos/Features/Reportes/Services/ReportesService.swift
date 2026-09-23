@@ -76,8 +76,8 @@ func generarReporte(configuracion: ConfiguracionReporte) async throws -> Reporte
     return reporteGenerado
 }
 
-func descargarCSV(idReporte: Int) async throws -> URL {
-    guard let url = URL(string: "\(urlBaseAPI)/reportes/\(idReporte)/csv") else {
+func obtenerDatosReporte(idReporte: Int) async throws -> DatosReporte {
+    guard let url = URL(string: "\(urlBaseAPI)/reportes/\(idReporte)/datos") else {
         print("URL incorrecto")
         throw URLError(.badURL)
     }
@@ -94,7 +94,30 @@ func descargarCSV(idReporte: Int) async throws -> URL {
         throw URLError(.badServerResponse)
     }
 
-    let nombreArchivo = httpResponse.suggestedFilename ?? "reporte-\(idReporte).csv"
+    let jsonDecoder = JSONDecoder()
+    let datos = try jsonDecoder.decode(DatosReporte.self, from: data)
+    return datos
+}
+
+func descargarArchivo(idReporte: Int) async throws -> URL {
+    guard let url = URL(string: "\(urlBaseAPI)/reportes/\(idReporte)/archivo") else {
+        print("URL incorrecto")
+        throw URLError(.badURL)
+    }
+
+    let (data, response) = try await URLSession.shared.data(from: url)
+
+    guard let httpResponse = response as? HTTPURLResponse else {
+        print("Respuesta no válida del servidor")
+        throw URLError(.badServerResponse)
+    }
+
+    guard httpResponse.statusCode == 200 else {
+        print("Código de error del API: \(httpResponse.statusCode)")
+        throw URLError(.badServerResponse)
+    }
+
+    let nombreArchivo = httpResponse.suggestedFilename ?? "reporte-\(idReporte)"
     let archivo = FileManager.default.temporaryDirectory.appendingPathComponent(nombreArchivo)
     try data.write(to: archivo)
     return archivo

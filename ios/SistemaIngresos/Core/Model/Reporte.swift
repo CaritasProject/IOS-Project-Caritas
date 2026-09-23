@@ -16,6 +16,27 @@ struct Reporte: Identifiable, Codable {
     }
 }
 
+struct ColumnaReporte: Identifiable, Codable {
+    var id: Int
+    var nombre: String
+}
+
+struct CeldaReporte: Identifiable, Codable {
+    var id: Int
+    var valor: String
+}
+
+struct FilaReporte: Identifiable, Codable {
+    var id: Int
+    var celdas: [CeldaReporte]
+}
+
+struct DatosReporte: Codable {
+    var columnas: [ColumnaReporte]
+    var filas: [FilaReporte]
+    var datosAl: String
+}
+
 struct ConfiguracionReporte: Codable {
     var tipo: String
     var desde: String

@@ -1,12 +1,13 @@
 import calendar
 import csv
 import io
-from datetime import date
+from datetime import date, datetime
 
 import pyodbc
 from flask import Blueprint, Response, jsonify, request
 from pydantic import ValidationError
 
+from core.archivos import archivo_excel, archivo_pdf, titulo_columna, valor_legible
 from core.db import obtener_conexion
 from models.reporte import ConfiguracionReporte
 from routers.metas import CONSULTA_METAS, objetivo_prorrateado
@@ -285,16 +286,24 @@ def respuesta_csv(nombre_archivo: str, columnas: list, filas: list) -> Response:
                     headers={"Content-Disposition": f'attachment; filename="{nombre_archivo}"'})
 
 
-@bp.get("/<int:id_reporte>/csv")
-def descargar_csv(id_reporte: int):
-    cursor = obtener_conexion().cursor()
-    cursor.execute("""SELECT t.NOMBRE AS TIPO_REPORTE, h.FECHA_DESDE, h.FECHA_HASTA
-                      FROM dbo.HISTORIAL_REPORTE h
-                      JOIN dbo.CAT_TIPO_REPORTE t ON t.ID_TIPO_REPORTE = h.ID_TIPO_REPORTE
-                      WHERE h.ID_REPORTE = ?""", id_reporte)
+EXTENSIONES = {"PDF": "pdf", "EXCEL": "xlsx", "CSV": "csv"}
+TIPOS_MIME = {"pdf": "application/pdf",
+              "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}
+
+
+def alcance(cursor, id_reporte: int, tabla: str, catalogo: str, columna_id: str) -> str:
+    cursor.execute(f"""SELECT c.NOMBRE FROM dbo.{tabla} a
+                       JOIN dbo.{catalogo} c ON c.{columna_id} = a.{columna_id}
+                       WHERE a.ID_REPORTE = ? ORDER BY c.NOMBRE""", id_reporte)
+    nombres = [f.NOMBRE for f in cursor.fetchall()]
+    return ", ".join(nombres) if nombres else "Todas"
+
+
+def contenido_del_reporte(cursor, id_reporte: int):
+    cursor.execute(CONSULTA_REPORTES + " WHERE h.ID_REPORTE = ?", id_reporte)
     reporte = cursor.fetchone()
     if reporte is None:
-        return error(f"No existe el reporte {id_reporte}.", 404)
+        return None
 
     tipo, desde, hasta = reporte.TIPO_REPORTE, reporte.FECHA_DESDE, reporte.FECHA_HASTA
     if tipo == "TELEMARKETING":
@@ -303,6 +312,79 @@ def descargar_csv(id_reporte: int):
         columnas, filas = filas_de_metas(cursor, desde, hasta)
     else:
         columnas, filas = filas_de_cobros(cursor, id_reporte, tipo == "COBRANZA")
+    return reporte, columnas, filas
 
-    nombre = f"reporte-{id_reporte}_{tipo.lower()}_{desde.isoformat()}_{hasta.isoformat()}.csv"
-    return respuesta_csv(nombre, columnas, filas)
+
+def detalles_del_reporte(cursor, reporte) -> list:
+    return [
+        ("Tipo", TIPO_PARA_APP[reporte.TIPO_REPORTE]),
+        ("Periodo", f"{reporte.FECHA_DESDE.isoformat()} a {reporte.FECHA_HASTA.isoformat()}"),
+        ("Línea estratégica", alcance(cursor, reporte.ID_REPORTE, "REPORTE_LINEA_ESTRATEGICA",
+                                      "CAT_LINEA_ESTRATEGICA", "ID_LINEA_ESTRATEGICA")),
+        ("Campaña", alcance(cursor, reporte.ID_REPORTE, "REPORTE_CAMPANA_FINANCIERA",
+                            "CAT_CAMPANA_FINANCIERA", "ID_CAMPANA_FINANCIERA")),
+        ("Comprometido", f"${reporte.COMPROMETIDO:,.2f}"),
+        ("Cobrado", f"${reporte.COBRADO:,.2f}"),
+        ("Datos al", datetime.now().strftime("%Y-%m-%d %H:%M")),
+    ]
+
+
+def nombre_de_archivo(reporte, extension: str) -> str:
+    return (f"reporte-{reporte.ID_REPORTE}_{reporte.TIPO_REPORTE.lower()}_"
+            f"{reporte.FECHA_DESDE.isoformat()}_{reporte.FECHA_HASTA.isoformat()}.{extension}")
+
+
+@bp.get("/<int:id_reporte>/csv")
+def descargar_csv(id_reporte: int):
+    cursor = obtener_conexion().cursor()
+    contenido = contenido_del_reporte(cursor, id_reporte)
+    if contenido is None:
+        return error(f"No existe el reporte {id_reporte}.", 404)
+
+    reporte, columnas, filas = contenido
+    return respuesta_csv(nombre_de_archivo(reporte, "csv"), columnas, filas)
+
+
+@bp.get("/<int:id_reporte>/archivo")
+def descargar_archivo(id_reporte: int):
+    cursor = obtener_conexion().cursor()
+    contenido = contenido_del_reporte(cursor, id_reporte)
+    if contenido is None:
+        return error(f"No existe el reporte {id_reporte}.", 404)
+
+    reporte, columnas, filas = contenido
+    formato = request.args.get("formato", reporte.FORMATO).strip().upper()
+    if formato not in EXTENSIONES:
+        return error("El formato debe ser PDF, Excel o CSV.", 400)
+
+    extension = EXTENSIONES[formato]
+    nombre = nombre_de_archivo(reporte, extension)
+    if extension == "csv":
+        return respuesta_csv(nombre, columnas, filas)
+
+    titulo = nombre_del_reporte(reporte.TIPO_REPORTE, reporte.FECHA_DESDE, reporte.FECHA_HASTA)
+    detalles = detalles_del_reporte(cursor, reporte)
+    if extension == "pdf":
+        datos = archivo_pdf(titulo, detalles, columnas, filas)
+    else:
+        datos = archivo_excel(titulo, detalles, columnas, filas)
+    return Response(datos, mimetype=TIPOS_MIME[extension],
+                    headers={"Content-Disposition": f'attachment; filename="{nombre}"'})
+
+
+@bp.get("/<int:id_reporte>/datos")
+def datos_para_vista_previa(id_reporte: int):
+    cursor = obtener_conexion().cursor()
+    contenido = contenido_del_reporte(cursor, id_reporte)
+    if contenido is None:
+        return error(f"No existe el reporte {id_reporte}.", 404)
+
+    _, columnas, filas = contenido
+    return jsonify({
+        "columnas": [{"id": i, "nombre": titulo_columna(c)} for i, c in enumerate(columnas)],
+        "filas": [{"id": i,
+                   "celdas": [{"id": j, "valor": valor_legible(c, v)}
+                              for j, (c, v) in enumerate(zip(columnas, fila))]}
+                  for i, fila in enumerate(filas)],
+        "datosAl": datetime.now().strftime("%d/%m/%Y %H:%M"),
+    })

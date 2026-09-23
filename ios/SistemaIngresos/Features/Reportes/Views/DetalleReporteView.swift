@@ -20,7 +20,7 @@ struct DetalleReporteView: View {
 
                     Spacer()
 
-                    BotonCompartirReporte(idReporte: reporte.id, destacado: false)
+                    BotonCompartirReporte(reporte: reporte, destacado: false)
                 }
 
                 HStack(spacing: 0) {
@@ -39,19 +39,7 @@ struct DetalleReporteView: View {
                 .background(Palette.superficie)
                 .cornerRadius(14)
 
-                VStack(spacing: 12) {
-                    Image(systemName: "photo")
-                        .font(.system(size: 44))
-                        .foregroundColor(.gray)
-
-                    Text("Vista previa del documento")
-                        .font(.title3)
-                        .foregroundColor(.secondary)
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 420)
-                .background(Color.gray.opacity(0.15))
-                .cornerRadius(14)
+                VistaPreviaReporte(idReporte: reporte.id)
 
                 Spacer()
             }

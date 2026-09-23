@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct BotonCompartirReporte: View {
-    var idReporte: Int
+    var reporte: Reporte
     var destacado: Bool
 
     @State private var archivo: URL?
@@ -36,7 +36,7 @@ struct BotonCompartirReporte: View {
             }
         }
         .controlSize(.large)
-        .task(id: idReporte) {
+        .task(id: reporte.id) {
             await preparar(avisarSiFalla: false)
         }
         .alert("No se pudo preparar el archivo", isPresented: $mostrarError) {
@@ -47,7 +47,7 @@ struct BotonCompartirReporte: View {
     }
 
     var etiqueta: some View {
-        Label(preparando ? "Preparando…" : "Compartir CSV", systemImage: "square.and.arrow.up")
+        Label(preparando ? "Preparando…" : "Compartir \(reporte.formato)", systemImage: "square.and.arrow.up")
             .font(destacado ? .title3 : .headline)
             .fontWeight(destacado ? .bold : .regular)
             .padding(.horizontal, destacado ? 24 : 16)
@@ -58,7 +58,7 @@ struct BotonCompartirReporte: View {
         archivo = nil
         preparando = true
         do {
-            archivo = try await descargarCSV(idReporte: idReporte)
+            archivo = try await descargarArchivo(idReporte: reporte.id)
         } catch {
             if avisarSiFalla {
                 mostrarError.toggle()
@@ -69,5 +69,5 @@ struct BotonCompartirReporte: View {
 }
 
 #Preview {
-    BotonCompartirReporte(idReporte: 7, destacado: true)
+    BotonCompartirReporte(reporte: reportesDeMuestra()[0], destacado: true)
 }
