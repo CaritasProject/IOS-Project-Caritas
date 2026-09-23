@@ -5,6 +5,7 @@ struct Donante: Identifiable, Codable {
     let nombre: String
     let segmento: String
     let estado: String
+    let nivelRiesgo: NivelRiesgoDonante
     var montoTotal: Decimal = 0
     var ultimaDonacion: Date = .distantPast
     var primeraDonacion: Date = .distantPast
@@ -16,21 +17,35 @@ struct Donante: Identifiable, Codable {
     var llamadas: [LlamadaDonante] = []
 
     var estadoVisual: EstadoVisualDonante {
-        if estado == "inactivo" { return .inactive }
-        if segmento == "en_riesgo" { return .risk }
-        if segmento == "alto_valor" { return .highValue }
-        return .active
+        EstadoVisualDonante(nivelRiesgo: nivelRiesgo)
     }
 }
 
+enum NivelRiesgoDonante: String, Codable {
+    case verde
+    case amarillo
+    case naranja
+    case rojo
+}
+
 enum EstadoVisualDonante {
-    case active, risk, highValue, inactive
+    case verde, amarillo, naranja, rojo
+
+    init(nivelRiesgo: NivelRiesgoDonante) {
+        switch nivelRiesgo {
+        case .verde: self = .verde
+        case .amarillo: self = .amarillo
+        case .naranja: self = .naranja
+        case .rojo: self = .rojo
+        }
+    }
+
     var title: String {
         switch self {
-        case .active: "Activo"
-        case .risk: "Riesgo alto"
-        case .highValue: "Alto valor"
-        case .inactive: "Inactivo"
+        case .verde: "Riesgo bajo"
+        case .amarillo: "Riesgo medio"
+        case .naranja: "Riesgo elevado"
+        case .rojo: "Riesgo alto"
         }
     }
 }

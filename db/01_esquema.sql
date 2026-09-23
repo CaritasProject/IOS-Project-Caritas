@@ -1,0 +1,341 @@
+/* =============================================================================
+   Sistema de Ingresos — Cáritas de Monterrey, A.B.P.
+   01_esquema.sql · Tablas, llaves, restricciones y vista de indicadores
+   Motor: Microsoft SQL Server
+
+   Criterio del modelo
+   - Las tablas OPE_* conservan el nombre y las columnas del sistema actual de
+     Cáritas (Diccionario de Conceptos, sección 2), solo con lo que usa la app.
+   - Los ID_* que en su base apuntan a catálogos se modelan como tablas CAT_*
+     con los valores del Diccionario (sección 1).
+   - Lo que se puede calcular no se almacena: vive en VW_DONANTE_INDICADORES.
+
+   El script se puede ejecutar de nuevo: borra y recrea todos los objetos.
+============================================================================= */
+
+IF DB_ID(N'SistemaIngresos') IS NULL
+    CREATE DATABASE SistemaIngresos;
+GO
+
+USE SistemaIngresos;
+GO
+
+/* ---------- Limpieza (orden inverso de dependencias) ---------- */
+DROP VIEW  IF EXISTS dbo.VW_DONANTE_INDICADORES;
+DROP TABLE IF EXISTS dbo.HISTORIAL_REPORTE;
+DROP TABLE IF EXISTS dbo.META;
+DROP TABLE IF EXISTS dbo.REGISTRO_LLAMADA;
+DROP TABLE IF EXISTS dbo.OPE_BITACORA_PAGOS_DONATIVOS;
+DROP TABLE IF EXISTS dbo.OPE_DONATIVOS_DONANTE;
+DROP TABLE IF EXISTS dbo.OPE_DONANTES;
+DROP TABLE IF EXISTS dbo.USUARIO;
+DROP TABLE IF EXISTS dbo.RECOLECTOR;
+DROP TABLE IF EXISTS dbo.CAT_ROL;
+DROP TABLE IF EXISTS dbo.CAT_ESTATUS_PAGO;
+DROP TABLE IF EXISTS dbo.CAT_ESTATUS_DONATIVO;
+DROP TABLE IF EXISTS dbo.CAT_CAMPANA_FINANCIERA;
+DROP TABLE IF EXISTS dbo.CAT_ASIGNACION;
+DROP TABLE IF EXISTS dbo.CAT_LINEA_ESTRATEGICA;
+DROP TABLE IF EXISTS dbo.CAT_TIPO_FRECUENCIA;
+DROP TABLE IF EXISTS dbo.CAT_FRECUENCIA;
+DROP TABLE IF EXISTS dbo.CAT_FORMA_PAGO;
+DROP TABLE IF EXISTS dbo.CAT_CLASIFICACION;
+DROP TABLE IF EXISTS dbo.CAT_TIPO_DONANTE;
+GO
+
+/* =============================================================================
+   CATÁLOGOS — valores del Diccionario de Conceptos
+============================================================================= */
+
+-- 1.21 TIPO_DONANTE
+CREATE TABLE dbo.CAT_TIPO_DONANTE (
+    ID_TIPO_DONANTE INT           NOT NULL CONSTRAINT PK_CAT_TIPO_DONANTE PRIMARY KEY,
+    NOMBRE          NVARCHAR(40)  NOT NULL CONSTRAINT UQ_CAT_TIPO_DONANTE UNIQUE
+);
+
+-- 1.22 CLASIFICACION
+CREATE TABLE dbo.CAT_CLASIFICACION (
+    ID_CLASIFICACION INT          NOT NULL CONSTRAINT PK_CAT_CLASIFICACION PRIMARY KEY,
+    NOMBRE           NVARCHAR(40) NOT NULL CONSTRAINT UQ_CAT_CLASIFICACION UNIQUE
+);
+
+-- 1.15 FORMA_PAGO
+CREATE TABLE dbo.CAT_FORMA_PAGO (
+    ID_FORMA_PAGO INT          NOT NULL CONSTRAINT PK_CAT_FORMA_PAGO PRIMARY KEY,
+    NOMBRE        NVARCHAR(40) NOT NULL CONSTRAINT UQ_CAT_FORMA_PAGO UNIQUE
+);
+
+-- 1.16 FRECUENCIA (sin frecuencia = PAGO ÚNICO)
+CREATE TABLE dbo.CAT_FRECUENCIA (
+    ID_FRECUENCIA INT          NOT NULL CONSTRAINT PK_CAT_FRECUENCIA PRIMARY KEY,
+    NOMBRE        NVARCHAR(20) NOT NULL CONSTRAINT UQ_CAT_FRECUENCIA UNIQUE
+);
+
+-- 1.17 TIPO_FRECUENCIA
+CREATE TABLE dbo.CAT_TIPO_FRECUENCIA (
+    ID_TIPO_FRECUENCIA INT          NOT NULL CONSTRAINT PK_CAT_TIPO_FRECUENCIA PRIMARY KEY,
+    NOMBRE             NVARCHAR(20) NOT NULL CONSTRAINT UQ_CAT_TIPO_FRECUENCIA UNIQUE
+);
+
+-- 1.5 LINEA_ESTRATEGICA
+CREATE TABLE dbo.CAT_LINEA_ESTRATEGICA (
+    ID_LINEA_ESTRATEGICA INT          NOT NULL CONSTRAINT PK_CAT_LINEA_ESTRATEGICA PRIMARY KEY,
+    NOMBRE               NVARCHAR(60) NOT NULL CONSTRAINT UQ_CAT_LINEA_ESTRATEGICA UNIQUE
+);
+
+-- 1.7 ASIGNACION (donativo etiquetado; sin asignación = OBRA)
+CREATE TABLE dbo.CAT_ASIGNACION (
+    ID_ASIGNACION INT          NOT NULL CONSTRAINT PK_CAT_ASIGNACION PRIMARY KEY,
+    NOMBRE        NVARCHAR(60) NOT NULL CONSTRAINT UQ_CAT_ASIGNACION UNIQUE
+);
+
+-- 1.6 CAMP_FINANCIERA
+CREATE TABLE dbo.CAT_CAMPANA_FINANCIERA (
+    ID_CAMPANA_FINANCIERA INT          NOT NULL CONSTRAINT PK_CAT_CAMPANA_FINANCIERA PRIMARY KEY,
+    NOMBRE                NVARCHAR(60) NOT NULL CONSTRAINT UQ_CAT_CAMPANA_FINANCIERA UNIQUE
+);
+
+-- 2.2.22 ID_ESTATUS del donativo. Cáritas no documentó los valores.
+CREATE TABLE dbo.CAT_ESTATUS_DONATIVO (
+    ID_ESTATUS INT          NOT NULL CONSTRAINT PK_CAT_ESTATUS_DONATIVO PRIMARY KEY,
+    NOMBRE     NVARCHAR(20) NOT NULL CONSTRAINT UQ_CAT_ESTATUS_DONATIVO UNIQUE
+);
+
+-- 2.3.14 ESTATUS_PAGO. Cáritas no documentó los valores.
+CREATE TABLE dbo.CAT_ESTATUS_PAGO (
+    ID_ESTATUS_PAGO INT          NOT NULL CONSTRAINT PK_CAT_ESTATUS_PAGO PRIMARY KEY,
+    NOMBRE          NVARCHAR(20) NOT NULL CONSTRAINT UQ_CAT_ESTATUS_PAGO UNIQUE
+);
+
+-- Roles para la autenticación por rol
+CREATE TABLE dbo.CAT_ROL (
+    ID_ROL INT          NOT NULL CONSTRAINT PK_CAT_ROL PRIMARY KEY,
+    NOMBRE NVARCHAR(20) NOT NULL CONSTRAINT UQ_CAT_ROL UNIQUE
+);
+
+-- 1.19 RECOLECTOR: asignado por zona
+CREATE TABLE dbo.RECOLECTOR (
+    ID_RECOLECTOR INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_RECOLECTOR PRIMARY KEY,
+    NOMBRE        NVARCHAR(120)     NULL,
+    ZONA          NVARCHAR(150)     NOT NULL
+);
+GO
+
+/* =============================================================================
+   USUARIOS DEL SISTEMA
+============================================================================= */
+
+CREATE TABLE dbo.USUARIO (
+    ID_USUARIO      INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_USUARIO PRIMARY KEY,
+    NOMBRE          NVARCHAR(120)     NOT NULL,
+    CORREO          NVARCHAR(120)     NOT NULL CONSTRAINT UQ_USUARIO_CORREO UNIQUE,
+    CONTRASENA_HASH NVARCHAR(255)     NOT NULL,   -- nunca la contraseña en claro
+    ID_ROL          INT               NOT NULL CONSTRAINT FK_USUARIO_ROL
+                                          REFERENCES dbo.CAT_ROL (ID_ROL),
+    AREA            NVARCHAR(80)      NOT NULL,
+    ULTIMO_ACCESO   DATETIME2(0)      NULL
+);
+GO
+
+/* =============================================================================
+   OPERACIÓN — tablas del sistema actual de Cáritas (Diccionario, sección 2)
+============================================================================= */
+
+-- 2.1 OPE_DONANTES
+CREATE TABLE dbo.OPE_DONANTES (
+    ID_DONANTE       INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_OPE_DONANTES PRIMARY KEY,
+    NOMBRE           NVARCHAR(80)      NULL,
+    A_PATERNO        NVARCHAR(60)      NULL,
+    A_MATERNO        NVARCHAR(60)      NULL,
+    RAZON_SOCIAL     NVARCHAR(150)     NULL,
+    ID_TIPO_DONANTE  INT               NOT NULL CONSTRAINT FK_DONANTES_TIPO
+                                           REFERENCES dbo.CAT_TIPO_DONANTE (ID_TIPO_DONANTE),
+    ID_CLASIFICACION INT               NULL     CONSTRAINT FK_DONANTES_CLASIFICACION
+                                           REFERENCES dbo.CAT_CLASIFICACION (ID_CLASIFICACION),
+    FECHA_ALTA       DATE              NOT NULL,
+    ESTATUS_DONANTE  NVARCHAR(10)      NOT NULL CONSTRAINT CK_DONANTES_ESTATUS
+                                           CHECK (ESTATUS_DONANTE IN (N'ACTIVO', N'INACTIVO')),
+    -- Persona física: nombre y apellido. Persona moral: razón social.
+    CONSTRAINT CK_DONANTES_NOMBRE
+        CHECK (RAZON_SOCIAL IS NOT NULL OR (NOMBRE IS NOT NULL AND A_PATERNO IS NOT NULL))
+);
+
+-- 2.2 OPE_DONATIVOS_DONANTE — el compromiso o promesa de pago
+CREATE TABLE dbo.OPE_DONATIVOS_DONANTE (
+    ID_DONATIVO           INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_OPE_DONATIVOS_DONANTE PRIMARY KEY,
+    ID_DONANTE            INT               NOT NULL CONSTRAINT FK_DONATIVOS_DONANTE
+                                                REFERENCES dbo.OPE_DONANTES (ID_DONANTE),
+    IMPORTE               DECIMAL(12,2)     NOT NULL CONSTRAINT CK_DONATIVOS_IMPORTE CHECK (IMPORTE > 0),
+    ID_FORMA_PAGO         INT               NOT NULL CONSTRAINT FK_DONATIVOS_FORMA_PAGO
+                                                REFERENCES dbo.CAT_FORMA_PAGO (ID_FORMA_PAGO),
+    ID_FRECUENCIA         INT               NULL     CONSTRAINT FK_DONATIVOS_FRECUENCIA
+                                                REFERENCES dbo.CAT_FRECUENCIA (ID_FRECUENCIA),
+    ID_TIPO_FRECUENCIA    INT               NULL     CONSTRAINT FK_DONATIVOS_TIPO_FRECUENCIA
+                                                REFERENCES dbo.CAT_TIPO_FRECUENCIA (ID_TIPO_FRECUENCIA),
+    PAGO_UNICO            BIT               NOT NULL CONSTRAINT DF_DONATIVOS_PAGO_UNICO DEFAULT (0),
+    ID_LINEA_ESTRATEGICA  INT               NOT NULL CONSTRAINT FK_DONATIVOS_LINEA
+                                                REFERENCES dbo.CAT_LINEA_ESTRATEGICA (ID_LINEA_ESTRATEGICA),
+    ID_ASIGNACION         INT               NOT NULL CONSTRAINT FK_DONATIVOS_ASIGNACION
+                                                REFERENCES dbo.CAT_ASIGNACION (ID_ASIGNACION),
+    ID_CAMPANA_FINANCIERA INT               NULL     CONSTRAINT FK_DONATIVOS_CAMPANA
+                                                REFERENCES dbo.CAT_CAMPANA_FINANCIERA (ID_CAMPANA_FINANCIERA),
+    ID_ESTATUS            INT               NOT NULL CONSTRAINT FK_DONATIVOS_ESTATUS
+                                                REFERENCES dbo.CAT_ESTATUS_DONATIVO (ID_ESTATUS),
+    FECHA_ALTA            DATE              NOT NULL,
+    -- 1.16 y 1.17: el pago único no lleva frecuencia; el recurrente lleva ambas.
+    CONSTRAINT CK_DONATIVOS_FRECUENCIA CHECK (
+        (PAGO_UNICO = 1 AND ID_FRECUENCIA IS NULL     AND ID_TIPO_FRECUENCIA IS NULL) OR
+        (PAGO_UNICO = 0 AND ID_FRECUENCIA IS NOT NULL AND ID_TIPO_FRECUENCIA IS NOT NULL)
+    )
+);
+
+-- 2.3 OPE_BITACORA_PAGOS_DONATIVOS — cada cobro programado de un compromiso
+CREATE TABLE dbo.OPE_BITACORA_PAGOS_DONATIVOS (
+    ID_BITACORA       INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_OPE_BITACORA_PAGOS PRIMARY KEY,
+    ID_DONATIVO       INT               NOT NULL CONSTRAINT FK_BITACORA_DONATIVO
+                                            REFERENCES dbo.OPE_DONATIVOS_DONANTE (ID_DONATIVO),
+    ID_RECOLECTOR     INT               NULL     CONSTRAINT FK_BITACORA_RECOLECTOR
+                                            REFERENCES dbo.RECOLECTOR (ID_RECOLECTOR),
+    FECHA_COBRO       DATE              NOT NULL,   -- fecha programada del cobro
+    FECHA_VENCIMIENTO DATE              NOT NULL,
+    FECHA_PAGO        DATE              NULL,       -- 1.13: fecha en que se confirmó el pago
+    IMPORTE           DECIMAL(12,2)     NOT NULL,   -- lo comprometido para este cobro
+    IMPORTE_COBRADO   DECIMAL(12,2)     NOT NULL CONSTRAINT DF_BITACORA_IMPORTE_COBRADO DEFAULT (0),
+    ESTATUS_PAGO      INT               NOT NULL CONSTRAINT FK_BITACORA_ESTATUS
+                                            REFERENCES dbo.CAT_ESTATUS_PAGO (ID_ESTATUS_PAGO),
+    CONSTRAINT CK_BITACORA_IMPORTES    CHECK (IMPORTE > 0 AND IMPORTE_COBRADO >= 0),
+    CONSTRAINT CK_BITACORA_VENCIMIENTO CHECK (FECHA_VENCIMIENTO >= FECHA_COBRO)
+);
+GO
+
+/* =============================================================================
+   TABLAS NUEVAS DEL SISTEMA
+============================================================================= */
+
+-- Bitácora de llamadas (proceso de Telemarketing 15.1.3)
+CREATE TABLE dbo.REGISTRO_LLAMADA (
+    ID_LLAMADA    INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_REGISTRO_LLAMADA PRIMARY KEY,
+    ID_DONANTE    INT               NOT NULL CONSTRAINT FK_LLAMADA_DONANTE
+                                        REFERENCES dbo.OPE_DONANTES (ID_DONANTE),
+    ID_USUARIO    INT               NOT NULL CONSTRAINT FK_LLAMADA_USUARIO
+                                        REFERENCES dbo.USUARIO (ID_USUARIO),
+    FECHA_LLAMADA DATETIME2(0)      NOT NULL,
+    RESULTADO     NVARCHAR(120)     NOT NULL,
+    COMENTARIOS   NVARCHAR(500)     NULL
+);
+
+-- Meta de procuración por asignación y periodo
+CREATE TABLE dbo.META (
+    ID_META       INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_META PRIMARY KEY,
+    ID_ASIGNACION INT               NOT NULL CONSTRAINT FK_META_ASIGNACION
+                                        REFERENCES dbo.CAT_ASIGNACION (ID_ASIGNACION),
+    FECHA_INICIO  DATE              NOT NULL,
+    FECHA_FIN     DATE              NOT NULL,
+    MONTO_META    DECIMAL(14,2)     NOT NULL CONSTRAINT CK_META_MONTO CHECK (MONTO_META > 0),
+    CONSTRAINT CK_META_PERIODO CHECK (FECHA_FIN >= FECHA_INICIO),
+    CONSTRAINT UQ_META_PERIODO UNIQUE (ID_ASIGNACION, FECHA_INICIO, FECHA_FIN)
+);
+
+-- Historial de reportes generados: solo los parámetros, no el documento
+CREATE TABLE dbo.HISTORIAL_REPORTE (
+    ID_REPORTE            INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_HISTORIAL_REPORTE PRIMARY KEY,
+    TIPO_REPORTE          NVARCHAR(20)      NOT NULL CONSTRAINT CK_REPORTE_TIPO
+                              CHECK (TIPO_REPORTE IN (N'INGRESOS', N'COBRANZA', N'TELEMARKETING', N'METAS')),
+    FECHA_DESDE           DATE              NOT NULL,
+    FECHA_HASTA           DATE              NOT NULL,
+    ID_LINEA_ESTRATEGICA  INT               NULL CONSTRAINT FK_REPORTE_LINEA
+                              REFERENCES dbo.CAT_LINEA_ESTRATEGICA (ID_LINEA_ESTRATEGICA),   -- NULL = todas
+    ID_CAMPANA_FINANCIERA INT               NULL CONSTRAINT FK_REPORTE_CAMPANA
+                              REFERENCES dbo.CAT_CAMPANA_FINANCIERA (ID_CAMPANA_FINANCIERA), -- NULL = todas
+    FORMATO               NVARCHAR(5)       NOT NULL CONSTRAINT CK_REPORTE_FORMATO
+                              CHECK (FORMATO IN (N'PDF', N'EXCEL', N'CSV')),
+    FECHA_GENERACION      DATETIME2(0)      NOT NULL CONSTRAINT DF_REPORTE_FECHA DEFAULT (SYSDATETIME()),
+    CONSTRAINT CK_REPORTE_RANGO CHECK (FECHA_HASTA >= FECHA_DESDE)
+);
+GO
+
+/* ---------- Índices sobre las llaves foráneas que usa la vista ---------- */
+CREATE INDEX IX_DONATIVOS_DONANTE  ON dbo.OPE_DONATIVOS_DONANTE (ID_DONANTE);
+CREATE INDEX IX_BITACORA_DONATIVO  ON dbo.OPE_BITACORA_PAGOS_DONATIVOS (ID_DONATIVO);
+CREATE INDEX IX_LLAMADA_DONANTE    ON dbo.REGISTRO_LLAMADA (ID_DONANTE);
+GO
+
+/* =============================================================================
+   VW_DONANTE_INDICADORES
+   Atributos derivados del donante. Se calculan aquí una sola vez para que
+   Donantes y Resumen muestren exactamente los mismos números.
+
+   Semáforo (confirmado en la reunión con la revisora):
+     VERDE     donante activo o con promesa de pago activa
+     AMARILLO  de 1 a 6 meses sin donación
+     NARANJA   de 6 a 12 meses sin donación
+     ROJO      más de 12 meses sin donación
+   Un donante sin promesa activa ni donación reciente se considera en riesgo.
+   El rojo coincide con "Donante en Riesgo" del Diccionario (13.3).
+
+   Alto valor: acumulado de los últimos 12 meses en el top 10% (Diccionario 13.3).
+============================================================================= */
+CREATE VIEW dbo.VW_DONANTE_INDICADORES
+AS
+WITH HOY AS (
+    SELECT CAST(GETDATE() AS DATE) AS FECHA
+),
+COBROS AS (
+    SELECT dv.ID_DONANTE,
+           b.FECHA_PAGO,
+           b.FECHA_VENCIMIENTO,
+           b.IMPORTE_COBRADO,
+           ep.NOMBRE AS ESTATUS
+    FROM dbo.OPE_BITACORA_PAGOS_DONATIVOS b
+    JOIN dbo.OPE_DONATIVOS_DONANTE dv ON dv.ID_DONATIVO = b.ID_DONATIVO
+    JOIN dbo.CAT_ESTATUS_PAGO ep      ON ep.ID_ESTATUS_PAGO = b.ESTATUS_PAGO
+),
+RESUMEN_COBROS AS (
+    SELECT c.ID_DONANTE,
+           MAX(CASE WHEN c.ESTATUS = N'COBRADO' THEN c.FECHA_PAGO END) AS ULTIMA_DONACION,
+           SUM(CASE WHEN c.ESTATUS = N'COBRADO' AND c.FECHA_PAGO > DATEADD(MONTH, -12, h.FECHA)
+                    THEN c.IMPORTE_COBRADO ELSE 0 END)                   AS ACUMULADO_12_MESES,
+           AVG(CASE WHEN c.ESTATUS = N'COBRADO' THEN c.IMPORTE_COBRADO END) AS MONTO_PROMEDIO,
+           SUM(CASE WHEN c.ESTATUS = N'RECHAZADO'
+                      OR (c.ESTATUS = N'PENDIENTE' AND c.FECHA_VENCIMIENTO < h.FECHA)
+                    THEN 1 ELSE 0 END)                                   AS COBROS_VENCIDOS
+    FROM COBROS c
+    CROSS JOIN HOY h
+    GROUP BY c.ID_DONANTE
+),
+PROMESAS_ACTIVAS AS (
+    SELECT DISTINCT dv.ID_DONANTE
+    FROM dbo.OPE_DONATIVOS_DONANTE dv
+    JOIN dbo.CAT_ESTATUS_DONATIVO es ON es.ID_ESTATUS = dv.ID_ESTATUS
+    WHERE es.NOMBRE = N'ACTIVO'
+),
+INDICADORES AS (
+    SELECT d.ID_DONANTE,
+           COALESCE(d.RAZON_SOCIAL, CONCAT_WS(N' ', d.NOMBRE, d.A_PATERNO, d.A_MATERNO)) AS NOMBRE_DONANTE,
+           d.ESTATUS_DONANTE,
+           d.FECHA_ALTA,
+           rc.ULTIMA_DONACION,
+           ISNULL(rc.ACUMULADO_12_MESES, 0) AS ACUMULADO_12_MESES,
+           ISNULL(rc.MONTO_PROMEDIO, 0)     AS MONTO_PROMEDIO,
+           ISNULL(rc.COBROS_VENCIDOS, 0)    AS COBROS_VENCIDOS,
+           CAST(CASE WHEN pa.ID_DONANTE IS NULL THEN 0 ELSE 1 END AS BIT) AS TIENE_PROMESA_ACTIVA,
+           CASE
+               WHEN d.ESTATUS_DONANTE = N'ACTIVO' OR pa.ID_DONANTE IS NOT NULL THEN N'VERDE'
+               WHEN rc.ULTIMA_DONACION IS NULL                                  THEN N'ROJO'
+               WHEN rc.ULTIMA_DONACION >= DATEADD(MONTH,  -1, h.FECHA)          THEN N'VERDE'
+               WHEN rc.ULTIMA_DONACION >= DATEADD(MONTH,  -6, h.FECHA)          THEN N'AMARILLO'
+               WHEN rc.ULTIMA_DONACION >= DATEADD(MONTH, -12, h.FECHA)          THEN N'NARANJA'
+               ELSE N'ROJO'
+           END AS NIVEL_RIESGO
+    FROM dbo.OPE_DONANTES d
+    CROSS JOIN HOY h
+    LEFT JOIN RESUMEN_COBROS rc   ON rc.ID_DONANTE = d.ID_DONANTE
+    LEFT JOIN PROMESAS_ACTIVAS pa ON pa.ID_DONANTE = d.ID_DONANTE
+)
+SELECT i.*,
+       CAST(CASE WHEN i.NIVEL_RIESGO <> N'VERDE' THEN 1 ELSE 0 END AS BIT) AS EN_RIESGO,
+       CAST(CASE WHEN i.ACUMULADO_12_MESES > 0
+                  AND PERCENT_RANK() OVER (ORDER BY i.ACUMULADO_12_MESES) >= 0.9
+                 THEN 1 ELSE 0 END AS BIT) AS ALTO_VALOR
+FROM INDICADORES i;
+GO

@@ -1,0 +1,18 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    container_name: sistema-ingresos-api-compartida
+    env_file:
+      - .env
+    ports:
+      - "5002:5000"
+    restart: unless-stopped
+    networks:
+      - sistema-ingresos
+
+networks:
+  sistema-ingresos:
+    name: sistema-ingresos-net
+    external: true
