@@ -48,4 +48,6 @@ app = crear_app()
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # HTTP (no HTTPS) en desarrollo. host 0.0.0.0 para que un iPad físico en la
+    # misma red también pueda conectarse, no solo el simulador.
+    app.run(host="0.0.0.0", port=configuracion.api_puerto, debug=True)

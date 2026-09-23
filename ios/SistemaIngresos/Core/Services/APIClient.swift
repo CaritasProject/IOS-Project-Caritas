@@ -22,9 +22,9 @@ final class APIClient {
         var errorDescription: String? {
             switch self {
             case .configuracion: "Configura una URL válida para la API."
-            case .http(401): "La sesión no es válida. Inicia sesión nuevamente."
-            case .http(404): "El donante ya no está disponible."
-            case .http(503): "El servicio de donantes no está configurado o no está disponible."
+            case .http(401): "Correo o contraseña incorrectos."
+            case .http(404): "El recurso ya no está disponible."
+            case .http(503): "El servicio no está configurado o no está disponible."
             case .http(let codigo): "La API respondió con un error (\(codigo))."
             case .datos: "La respuesta de la API no tiene el formato esperado."
             }
@@ -40,6 +40,29 @@ final class APIClient {
         if let token = token(), !token.isEmpty {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
+        let (data, response) = try await sesion.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw ErrorAPI.datos }
+        guard 200..<300 ~= http.statusCode else { throw ErrorAPI.http(http.statusCode) }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        do {
+            return try decoder.decode(T.self, from: data)
+        } catch { throw ErrorAPI.datos }
+    }
+
+    /// POST con cuerpo JSON. Lo usa el login (auth/login). Mismo estilo que get.
+    func post<Body: Encodable, T: Decodable>(_ path: String, body: Body) async throws -> T {
+        guard let base = URL(string: baseURL), ["http", "https"].contains(base.scheme),
+              base.host != nil else { throw ErrorAPI.configuracion }
+        var request = URLRequest(url: base.appending(path: path))
+        request.httpMethod = "POST"
+        request.timeoutInterval = 20
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        if let token = token(), !token.isEmpty {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        request.httpBody = try JSONEncoder().encode(body)
         let (data, response) = try await sesion.data(for: request)
         guard let http = response as? HTTPURLResponse else { throw ErrorAPI.datos }
         guard 200..<300 ~= http.statusCode else { throw ErrorAPI.http(http.statusCode) }

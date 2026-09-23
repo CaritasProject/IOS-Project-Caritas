@@ -10,6 +10,7 @@ class Configuracion(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     entorno: str = "desarrollo"
+    api_puerto: int = 5000
 
     sqlserver_host: str = ""
     sqlserver_puerto: int = 1433

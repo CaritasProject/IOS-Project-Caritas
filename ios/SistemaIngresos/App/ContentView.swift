@@ -16,13 +16,16 @@ struct ContentView: View {
     @State private var pestanaSeleccionada: Int = 1
 
     var body: some View {
-        TabView(selection: $pestanaSeleccionada) {
-
+        // Sin sesión iniciada se ve el login; con sesión, las pestañas.
+        if !sesion.sesionIniciada {
             LoginView()
-                .tabItem {
-                    Label("Acceso", systemImage: "person.crop.circle")
-                }
-                .tag(0)
+        } else {
+            pestanas
+        }
+    }
+
+    private var pestanas: some View {
+        TabView(selection: $pestanaSeleccionada) {
 
             ResumenView()
                 .tabItem {

@@ -219,23 +219,67 @@ en `CODEOWNERS`.
 
 ## 6. Puesta en marcha
 
-**API**
+### Base de datos (Docker)
+
+La base corre en un contenedor. En Mac con chip Apple usamos **Azure SQL Edge**
+(mismo motor T-SQL; la imagen normal de SQL Server 2022 no arranca bajo
+Colima/QEMU). Para cargar los scripts hace falta `sqlcmd`:
+
+```bash
+brew install mssql-tools18          # solo la primera vez (trae sqlcmd)
+cd api
+docker compose up -d                # levanta SQL Server
+./db/cargar.sh                       # crea el esquema y carga los datos
+```
+
+Credenciales de la base: usuario `sa`, contraseña `Caritas!2026` (en
+`docker-compose.yml`). Para apagar: `docker compose down` (conserva los datos)
+o `docker compose down -v` (los borra).
+
+> **Contraseña de los usuarios de prueba:** el seed trae solo el *hash* (la
+> contraseña real "se entrega aparte"). Para poder probar el login en local,
+> `db/cargar.sh` deja los hashes tal cual vienen; si necesitas una contraseña
+> conocida, genera el hash con `werkzeug.security.generate_password_hash` y
+> actualiza `dbo.USUARIO` en tu base local.
+
+### API
 
 ```bash
 cd api
-python -m venv venv
-venv\Scripts\activate        # Windows
+python3.12 -m venv .venv
+source .venv/bin/activate            # macOS/Linux
 pip install -r requirements.txt
-copy .env.example .env       # y llena los valores reales
-flask --app main run --debug
+cp .env.example .env                 # ya trae los valores del docker local
+python main.py
 ```
 
-La API queda en <http://localhost:5000>; para comprobar que responde:
-<http://localhost:5000/salud>
+La API queda en <http://localhost:5000> (HTTP, no HTTPS); para comprobar que
+responde: <http://localhost:5000/salud>. El login es
+`POST /auth/login` con `{"correo": "...", "password": "..."}` y devuelve
+`{ token, tipo, usuario }`.
+
+### Alta de usuarios
+
+Dos formas, las dos hashean la contraseña (nunca se guarda en claro):
+
+- **Desde la terminal** (el admin da de alta): `python crear_usuario.py`
+  (interactivo) o con `--nombre --correo --rol --area --password`.
+- **Por la API** (solo ADMINISTRADOR con sesión):
+  `POST /auth/registro` con `{ nombre, correo, password, rol, area }`.
+  `rol` acepta el ID (1=ADMINISTRADOR, 2=TELEFONISTA, 3=RECOLECTOR) o el nombre.
+  Responde `201` con el usuario, o `403` si quien llama no es admin.
 
 **iOS**
 
 Abre el proyecto en Xcode y ejecuta sobre el simulador de **iPad Pro en horizontal**.
+Ten la API y la base encendidas antes de iniciar sesión.
+
+- El simulador habla con `http://localhost:5000` (valor por defecto del `APIClient`).
+- Para apuntar a otra dirección (p. ej. un **iPad físico** contra la IP de la
+  Mac en la red), define `API_BASE_URL` en el Scheme de Xcode o en `Info.plist`;
+  ambos deben estar en la misma Wi-Fi.
+- La app permite HTTP (no HTTPS) en desarrollo con una excepción de App
+  Transport Security en `SistemaIngresos/Info.plist`. En producción sería HTTPS.
 
 **Nota sobre el `.pbxproj`:** `.gitattributes` lo marca como `merge=union`, lo
 que reduce los conflictos cuando dos personas agregan archivos al proyecto al

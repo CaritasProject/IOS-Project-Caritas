@@ -14,6 +14,44 @@ import Foundation
 final class SesionService: ObservableObject {
     @Published private(set) var usuario: Usuario?
     @Published private(set) var sesionIniciada: Bool = false
+    @Published private(set) var cargando: Bool = false
+    @Published var mensajeError: String?
 
-    // TODO: implementar inicio y cierre de sesión contra /auth de la API.
+    /// Token JWT de la sesión. Los demás servicios lo piden para llamar a la API.
+    private(set) var token: String?
+
+    private let loginService = LoginService()
+
+    /// Inicia sesión contra /auth. Si algo falla, deja el motivo en `mensajeError`.
+    func iniciarSesion(correo: String, password: String) async {
+        mensajeError = nil
+
+        let correoLimpio = correo.trimmingCharacters(in: .whitespacesAndNewlines)
+        if correoLimpio.isEmpty || password.isEmpty {
+            mensajeError = "Escribe tu correo y contraseña."
+            return
+        }
+
+        cargando = true
+        defer { cargando = false }
+
+        do {
+            let respuesta = try await loginService.iniciarSesion(correo: correoLimpio, password: password)
+            self.token = respuesta.token
+            self.usuario = respuesta.usuario
+            self.sesionIniciada = true
+        } catch let error as APIClient.ErrorAPI {
+            self.mensajeError = error.errorDescription ?? "No se pudo iniciar sesión."
+        } catch {
+            self.mensajeError = "Ocurrió un error inesperado."
+        }
+    }
+
+    /// Cierra la sesión y limpia todo el estado.
+    func cerrarSesion() {
+        self.usuario = nil
+        self.token = nil
+        self.sesionIniciada = false
+        self.mensajeError = nil
+    }
 }

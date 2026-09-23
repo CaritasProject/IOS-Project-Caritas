@@ -8,7 +8,30 @@
 
 import Foundation
 
+/// Lo que se manda a POST /auth/login.
+struct CredencialesLogin: Encodable {
+    let correo: String
+    let password: String
+}
+
+/// Lo que devuelve POST /auth/login.
+struct RespuestaLogin: Decodable {
+    let token: String
+    let tipo: String
+    let usuario: Usuario
+}
+
 @MainActor
 final class LoginService: ObservableObject {
-    // TODO (Persona 1): iniciar sesión, cerrar sesión y cargar el perfil.
+    private let api: APIClient
+
+    init(api: APIClient = .compartido) {
+        self.api = api
+    }
+
+    /// Envía las credenciales a la API y devuelve el token + el usuario.
+    func iniciarSesion(correo: String, password: String) async throws -> RespuestaLogin {
+        let credenciales = CredencialesLogin(correo: correo, password: password)
+        return try await api.post("auth/login", body: credenciales)
+    }
 }
