@@ -35,10 +35,10 @@ struct DonanteRow: View {
 extension EstadoVisualDonante {
     var color: Color {
         switch self {
-        case .active: Palette.riesgoBajo
-        case .risk: Palette.riesgoAlto
-        case .highValue: Palette.riesgoMedio
-        case .inactive: .gray
+        case .verde: Palette.riesgoBajo
+        case .amarillo: Palette.riesgoMedio
+        case .naranja: Palette.riesgoElevado
+        case .rojo: Palette.riesgoAlto
         }
     }
 }

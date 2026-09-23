@@ -23,13 +23,22 @@ SELECT
     i.ULTIMA_DONACION,
     i.ACUMULADO_12_MESES,
     i.MONTO_PROMEDIO,
-    i.NIVEL_RIESGO,
-    i.EN_RIESGO,
+    riesgo.NIVEL_RIESGO,
+    CAST(CASE WHEN riesgo.NIVEL_RIESGO <> N'VERDE' THEN 1 ELSE 0 END AS BIT) AS EN_RIESGO,
     i.ALTO_VALOR,
     ISNULL(total.MONTO_TOTAL, 0) AS MONTO_TOTAL,
     ISNULL(primera.PRIMERA_DONACION, i.FECHA_ALTA) AS PRIMERA_DONACION,
     ISNULL(frecuencia.FRECUENCIA, N'No especificada') AS FRECUENCIA
 FROM dbo.VW_DONANTE_INDICADORES i
+CROSS APPLY (
+    SELECT CASE
+        WHEN i.ULTIMA_DONACION IS NULL THEN N'ROJO'
+        WHEN i.ULTIMA_DONACION >= DATEADD(MONTH, -1, CAST(GETDATE() AS DATE)) THEN N'VERDE'
+        WHEN i.ULTIMA_DONACION >= DATEADD(MONTH, -6, CAST(GETDATE() AS DATE)) THEN N'AMARILLO'
+        WHEN i.ULTIMA_DONACION >= DATEADD(MONTH, -12, CAST(GETDATE() AS DATE)) THEN N'NARANJA'
+        ELSE N'ROJO'
+    END AS NIVEL_RIESGO
+) riesgo
 OUTER APPLY (
     SELECT SUM(b.IMPORTE_COBRADO) AS MONTO_TOTAL
     FROM dbo.OPE_DONATIVOS_DONANTE d
@@ -92,13 +101,7 @@ def segmento(row):
 
 def detalle_estado(row):
     nivel = row["NIVEL_RIESGO"].lower()
-    if row["ESTATUS_DONANTE"].lower() == "inactivo":
-        return f"Donante inactivo · riesgo {nivel}"
-    if row["EN_RIESGO"]:
-        return f"Donante en riesgo · nivel {nivel}"
-    if row["ALTO_VALOR"]:
-        return "Donante activo de alto valor"
-    return "Donante activo"
+    return f"Nivel de riesgo {nivel} según la última donación"
 
 
 def serializar_donante(row, pagos=None, llamadas=None):
@@ -107,6 +110,7 @@ def serializar_donante(row, pagos=None, llamadas=None):
         "nombre": row["NOMBRE_DONANTE"],
         "segmento": segmento(row),
         "estado": row["ESTATUS_DONANTE"].lower(),
+        "nivelRiesgo": row["NIVEL_RIESGO"].lower(),
         "montoTotal": numero(row["MONTO_TOTAL"]),
         "ultimaDonacion": iso8601(row["ULTIMA_DONACION"]),
         "primeraDonacion": iso8601(row["PRIMERA_DONACION"]),

@@ -22,6 +22,8 @@ final class MockHTTP: URLProtocol {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         let donors = try decoder.decode([Donante].self, from: data)
+        precondition(donors[0].nivelRiesgo == .amarillo)
+        precondition(donors[0].estadoVisual == .amarillo, "El semáforo debe depender del nivel de riesgo, no del estatus")
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         let first = try encoder.encode(donors[0])
