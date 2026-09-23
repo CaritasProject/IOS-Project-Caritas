@@ -1,25 +1,15 @@
-"""Esquema de entrada de Reportes.
-
-Dueño: Persona 4 (Reportes). Las llaves van en camelCase porque son las mismas
-que manda la app en ConfiguracionReporte (Reporte.swift).
-"""
-
 from datetime import date
-
 from pydantic import BaseModel, field_validator, model_validator
-
 TIPOS_VALIDOS = ("INGRESOS", "COBRANZA", "TELEMARKETING", "METAS")
 FORMATOS_VALIDOS = ("PDF", "EXCEL", "CSV")
 
-
 class ConfiguracionReporte(BaseModel):
     tipo: str
-    desde: date                       # "2026-08-01"
+    desde: date
     hasta: date
-    lineaEstrategica: str = "Todas"   # nombre del catálogo o "Todas"
+    lineaEstrategica: str = "Todas"
     campania: str = "Todas"
     formato: str
-
     @field_validator("tipo")
     @classmethod
     def validar_tipo(cls, valor: str) -> str:

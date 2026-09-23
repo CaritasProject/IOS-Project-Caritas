@@ -36,7 +36,6 @@ struct ReportesView: View {
                 }
             }
         }
-        // .task no se vio en clase: corre código asíncrono cuando aparece la pantalla.
         .task {
             do {
                 listaReportes = try await obtenerReportes()

@@ -1,14 +1,3 @@
-"""Blueprint de reportes (biblioteca, detalle y generación).
-
-Dueño: Persona 4 (Reportes).
-
-HISTORIAL_REPORTE solo guarda los parámetros de cada reporte. Lo demás que
-muestra la app se arma aquí:
-  - comprometido y cobrado: suma de OPE_BITACORA_PAGOS_DONATIVOS en el rango.
-  - nombre, periodicidad, fecha y detalle: se derivan del tipo y las fechas.
-Las llaves del JSON son las de Reporte.swift, en camelCase.
-"""
-
 import calendar
 from datetime import date
 
@@ -38,7 +27,6 @@ MESES_LARGOS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio",
                 "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
 TRIMESTRES = ["primer", "segundo", "tercer", "cuarto"]
 
-# Un reporte con sus montos. Se usa para la biblioteca y para el detalle.
 CONSULTA_REPORTES = """
 SELECT h.ID_REPORTE, t.NOMBRE AS TIPO_REPORTE, h.FECHA_DESDE, h.FECHA_HASTA,
        f.NOMBRE AS FORMATO, h.FECHA_GENERACION, m.COMPROMETIDO, m.COBRADO
@@ -51,7 +39,6 @@ CROSS APPLY (
     FROM dbo.OPE_BITACORA_PAGOS_DONATIVOS b
     JOIN dbo.OPE_DONATIVOS_DONANTE d ON d.ID_DONATIVO = b.ID_DONATIVO
     WHERE b.FECHA_COBRO BETWEEN h.FECHA_DESDE AND h.FECHA_HASTA
-      -- Sin filas en la tabla de alcance = no se filtra por ese concepto.
       AND (NOT EXISTS (SELECT 1 FROM dbo.REPORTE_LINEA_ESTRATEGICA al WHERE al.ID_REPORTE = h.ID_REPORTE)
            OR d.ID_LINEA_ESTRATEGICA IN (SELECT al.ID_LINEA_ESTRATEGICA FROM dbo.REPORTE_LINEA_ESTRATEGICA al
                                          WHERE al.ID_REPORTE = h.ID_REPORTE))
@@ -61,8 +48,6 @@ CROSS APPLY (
 ) m
 """
 
-
-# ---------------------------------------------------------------- utilidades
 
 def error(mensaje: str, codigo: int):
     return jsonify({"error": mensaje}), codigo
@@ -93,7 +78,6 @@ def nombre_del_reporte(tipo: str, desde: date, hasta: date) -> str:
 
 
 def rango_corto(desde: date, hasta: date) -> str:
-    """'17–23 ago' si es el mismo mes; '1 abr – 30 jun' si no."""
     if (desde.year, desde.month) == (hasta.year, hasta.month):
         return f"{desde.day}–{hasta.day} {MESES_CORTOS[desde.month - 1]}"
     return (f"{desde.day} {MESES_CORTOS[desde.month - 1]} – "
@@ -108,21 +92,17 @@ def fila_a_json(fila) -> dict:
         "nombre": nombre_del_reporte(tipo, desde, hasta),
         "fecha": f"{generado.day:02d} {MESES_CORTOS[generado.month - 1]} {generado.year}",
         "formato": FORMATO_PARA_APP[fila.FORMATO],
-        # No se guarda el documento, así que no hay páginas que contar: se muestra el rango.
         "detalle": rango_corto(desde, hasta),
         "periodicidad": "Semanal" if (hasta - desde).days + 1 <= 7 else "Mensual",
         "tipo": TIPO_PARA_APP[tipo],
-        # float y no Decimal: Flask convierte Decimal en texto y Swift espera un número.
         "comprometido": float(fila.COMPROMETIDO),
         "cobrado": float(fila.COBRADO),
     }
 
 
 def buscar_en_catalogo(cursor, tabla: str, columna_id: str, nombre: str, etiqueta: str):
-    """Convierte el nombre que manda la app en el ID del catálogo. 'Todas' es NULL."""
     if nombre.strip().upper() in ("", "TODAS", "TODOS"):
         return None
-    # tabla y columna_id son constantes de este archivo, nunca vienen de la petición.
     cursor.execute(f"SELECT {columna_id} FROM dbo.{tabla} WHERE NOMBRE = ?", nombre.strip())
     fila = cursor.fetchone()
     if fila is None:
@@ -133,7 +113,6 @@ def buscar_en_catalogo(cursor, tabla: str, columna_id: str, nombre: str, etiquet
 
 
 def mensaje_de_validacion(detalle: dict) -> str:
-    """Pydantic responde en inglés; aquí se traduce lo que la app puede mandar mal."""
     campo = ".".join(str(p) for p in detalle["loc"])
     if detalle["type"] == "missing":
         return f"Falta el campo '{campo}'."
@@ -148,11 +127,8 @@ def base_no_disponible(_):
     return error("La base de datos no está disponible. Intenta de nuevo.", 503)
 
 
-# ---------------------------------------------------------------- endpoints
-
 @bp.get("")
 def listar_reportes():
-    """Biblioteca de reportes, del más reciente al más antiguo."""
     cursor = obtener_conexion().cursor()
     cursor.execute(CONSULTA_REPORTES + " ORDER BY h.FECHA_GENERACION DESC")
     return jsonify([fila_a_json(f) for f in cursor.fetchall()])
@@ -160,7 +136,6 @@ def listar_reportes():
 
 @bp.get("/<int:id_reporte>")
 def obtener_reporte(id_reporte: int):
-    """Un reporte con sus montos, para la vista previa."""
     cursor = obtener_conexion().cursor()
     cursor.execute(CONSULTA_REPORTES + " WHERE h.ID_REPORTE = ?", id_reporte)
     fila = cursor.fetchone()
@@ -171,7 +146,6 @@ def obtener_reporte(id_reporte: int):
 
 @bp.post("")
 def generar_reporte():
-    """Guarda la configuración en el historial y devuelve el reporte generado."""
     datos = request.get_json(silent=True)
     if datos is None:
         return error("El cuerpo debe ser JSON.", 400)
@@ -194,7 +168,6 @@ def generar_reporte():
     except LookupError as e:
         return error(str(e), 400)
 
-    # TODO: guardar ID_USUARIO cuando el login entregue una sesión real.
     cursor.execute(
         """INSERT INTO dbo.HISTORIAL_REPORTE (ID_TIPO_REPORTE, ID_FORMATO, FECHA_DESDE, FECHA_HASTA)
            OUTPUT INSERTED.ID_REPORTE

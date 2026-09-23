@@ -1,6 +1,5 @@
 import Foundation
 
-// El backend debe mandar estas llaves en camelCase.
 struct Reporte: Identifiable, Codable {
     var id: Int
     var nombre: String
@@ -26,7 +25,6 @@ struct ConfiguracionReporte: Codable {
     var formato: String
 }
 
-// Solo para los #Preview: la app carga los reportes desde la API.
 func reportesDeMuestra() -> [Reporte] {
     return [
         Reporte(id: 1, nombre: "Cobranza semanal · sem 34", fecha: "24 ago 2026",
