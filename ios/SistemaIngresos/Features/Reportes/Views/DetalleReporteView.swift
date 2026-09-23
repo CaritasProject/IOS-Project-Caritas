@@ -3,8 +3,6 @@ import SwiftUI
 struct DetalleReporteView: View {
     var reporte: Reporte
 
-    @State private var mostrarCompartir = false
-
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
@@ -22,16 +20,7 @@ struct DetalleReporteView: View {
 
                     Spacer()
 
-                    Button {
-                        mostrarCompartir.toggle()
-                    } label: {
-                        Label("Compartir", systemImage: "square.and.arrow.up")
-                            .font(.headline)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 12)
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.large)
+                    BotonCompartirReporte(idReporte: reporte.id, destacado: false)
                 }
 
                 HStack(spacing: 0) {
@@ -67,11 +56,6 @@ struct DetalleReporteView: View {
                 Spacer()
             }
             .padding(28)
-        }
-        .alert("Compartir todavía no está disponible", isPresented: $mostrarCompartir) {
-            Button("OK") {}
-        } message: {
-            Text("El archivo se podrá compartir cuando la API entregue el documento generado.")
         }
     }
 

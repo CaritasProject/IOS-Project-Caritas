@@ -1,14 +1,10 @@
 import SwiftUI
 
 struct ReporteGeneradoView: View {
-    var tipo: String
-    var periodo: String
-    var formato: String
+    var reporte: Reporte
 
     @Binding var mostrandoConfigurar: Bool
     @Binding var mostrandoGenerado: Bool
-
-    @State private var mostrarCompartir = false
 
     var body: some View {
         VStack(spacing: 22) {
@@ -26,25 +22,14 @@ struct ReporteGeneradoView: View {
                 .fontWeight(.bold)
                 .foregroundColor(.primary)
 
-            Text("\(tipo) · \(periodo) · \(formato). Ya está disponible en la biblioteca de reportes.")
+            Text("\(reporte.nombre) · \(reporte.formato). Ya está disponible en la biblioteca de reportes.")
                 .font(.title3)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: 480)
 
             HStack(spacing: 14) {
-                Button {
-                    mostrarCompartir.toggle()
-                } label: {
-                    Label("Compartir", systemImage: "square.and.arrow.up")
-                        .font(.title3)
-                        .fontWeight(.bold)
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 12)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(Palette.turquesa)
-                .controlSize(.large)
+                BotonCompartirReporte(idReporte: reporte.id, destacado: true)
 
                 Button {
                     mostrandoGenerado = false
@@ -74,18 +59,11 @@ struct ReporteGeneradoView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(28)
-        .alert("Compartir todavía no está disponible", isPresented: $mostrarCompartir) {
-            Button("OK") {}
-        } message: {
-            Text("El archivo se podrá compartir cuando la API entregue el documento generado.")
-        }
     }
 }
 
 #Preview {
-    ReporteGeneradoView(tipo: "Ingresos",
-                        periodo: "Agosto 2026",
-                        formato: "PDF",
+    ReporteGeneradoView(reporte: reportesDeMuestra()[0],
                         mostrandoConfigurar: .constant(false),
                         mostrandoGenerado: .constant(true))
         .background(Palette.fondo)

@@ -130,10 +130,8 @@ struct ReportesView: View {
 
     var panelDerecho: some View {
         VStack {
-            if mostrandoGenerado {
-                ReporteGeneradoView(tipo: tipoElegido,
-                                    periodo: periodo,
-                                    formato: formatoElegido,
+            if mostrandoGenerado, let nuevo = listaReportes.first {
+                ReporteGeneradoView(reporte: nuevo,
                                     mostrandoConfigurar: $mostrandoConfigurar,
                                     mostrandoGenerado: $mostrandoGenerado)
 

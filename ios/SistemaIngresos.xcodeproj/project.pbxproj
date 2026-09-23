@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E1A0000000000000000000C2 /* BotonCompartirReporte.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A0000000000000000000C1 /* BotonCompartirReporte.swift */; };
 		E1A0000000000000000000B2 /* PerfilView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A0000000000000000000B1 /* PerfilView.swift */; };
 		E1A0000000000000000000A2 /* AvatarUsuario.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A0000000000000000000A1 /* AvatarUsuario.swift */; };
 		C2B0000000000001META0001 /* MetaAvance.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B0000000000002META0002 /* MetaAvance.swift */; };
@@ -60,6 +61,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		E1A0000000000000000000C1 /* BotonCompartirReporte.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BotonCompartirReporte.swift; sourceTree = "<group>"; };
 		E1A0000000000000000000B1 /* PerfilView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerfilView.swift; sourceTree = "<group>"; };
 		E1A0000000000000000000A1 /* AvatarUsuario.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarUsuario.swift; sourceTree = "<group>"; };
 		C2B0000000000002META0002 /* MetaAvance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetaAvance.swift; sourceTree = "<group>"; };
@@ -416,6 +418,7 @@
 			isa = PBXGroup;
 			children = (
 				35311DEC6086E3EF4B176D0C /* ReporteRow.swift */,
+				E1A0000000000000000000C1 /* BotonCompartirReporte.swift */,
 				ACFA1D0C396EB4B14D7DE39F /* TarjetaDatoReporte.swift */,
 			);
 			path = Components;
@@ -515,6 +518,7 @@
 				1526DCE301347EF20D8DC62F /* Donativo.swift in Sources */,
 				0745B5BCC14DCD68393DF2ED /* Formatos.swift in Sources */,
 				676B526BCE6BB718E6784327 /* LoginService.swift in Sources */,
+				E1A0000000000000000000C2 /* BotonCompartirReporte.swift in Sources */,
 				E1A0000000000000000000A2 /* AvatarUsuario.swift in Sources */,
 				E1A0000000000000000000B2 /* PerfilView.swift in Sources */,
 				AED8669BA5A9D958B661BAB1 /* LoginView.swift in Sources */,
