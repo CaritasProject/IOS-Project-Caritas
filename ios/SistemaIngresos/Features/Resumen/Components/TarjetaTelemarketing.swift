@@ -1,18 +1,22 @@
 import SwiftUI
 
 struct TarjetaTelemarketing: View {
-    let llamadas: String
-    let compromisos: String
-    let conversion: String
+    let datos: Telemarketing
 
     var body: some View {
         TarjetaPanel(titulo: "Telemarketing") {
             VStack(spacing: 0) {
-                renglon("Llamadas realizadas", llamadas, color: paletaResumen.texto)
+                renglon("Llamadas realizadas",
+                        formatosResumen.entero(datos.llamadas),
+                        color: paletaResumen.texto)
                 Divider()
-                renglon("Compromisos generados", compromisos, color: paletaResumen.texto)
+                renglon("Compromisos generados",
+                        formatosResumen.entero(datos.compromisosGenerados),
+                        color: paletaResumen.texto)
                 Divider()
-                renglon("Tasa de conversión", conversion, color: paletaResumen.turquesa)
+                renglon("Tasa de conversión",
+                        "\(datos.tasaConversion.formatted(.number.precision(.fractionLength(1)))) %",
+                        color: paletaResumen.turquesa)
 
                 Spacer()
             }
@@ -37,9 +41,8 @@ struct TarjetaTelemarketing: View {
 }
 
 #Preview {
-    TarjetaTelemarketing(llamadas: "4,820",
-                         compromisos: "612",
-                         conversion: "12.7 %")
+    TarjetaTelemarketing(datos: Telemarketing(llamadas: 4820, compromisosGenerados: 612,
+                                              tasaConversion: 12.7))
         .frame(width: 340)
         .padding()
         .background(paletaResumen.fondo)

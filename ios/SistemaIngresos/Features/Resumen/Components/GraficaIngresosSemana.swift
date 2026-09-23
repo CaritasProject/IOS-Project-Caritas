@@ -78,11 +78,11 @@ struct GraficaIngresosSemana: View {
 
 #Preview {
     GraficaIngresosSemana(semanas: [
-        SemanaIngreso(id: 31, etiqueta: "Sem 31", comprometido: 430000, cobrado: 352000),
-        SemanaIngreso(id: 32, etiqueta: "Sem 32", comprometido: 486000, cobrado: 398000),
-        SemanaIngreso(id: 33, etiqueta: "Sem 33", comprometido: 524000, cobrado: 421000),
-        SemanaIngreso(id: 34, etiqueta: "Sem 34", comprometido: 560000, cobrado: 468000),
-        SemanaIngreso(id: 35, etiqueta: "Sem 35", comprometido: 402000, cobrado: 318000)
+        SemanaIngreso(semana: 31, etiqueta: "Sem 31", comprometido: 430000, cobrado: 352000),
+        SemanaIngreso(semana: 32, etiqueta: "Sem 32", comprometido: 486000, cobrado: 398000),
+        SemanaIngreso(semana: 33, etiqueta: "Sem 33", comprometido: 524000, cobrado: 421000),
+        SemanaIngreso(semana: 34, etiqueta: "Sem 34", comprometido: 560000, cobrado: 468000),
+        SemanaIngreso(semana: 35, etiqueta: "Sem 35", comprometido: 402000, cobrado: 318000)
     ], alturaMaxima: 190)
         .padding()
         .background(paletaResumen.fondo)
