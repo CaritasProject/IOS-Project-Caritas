@@ -1,8 +1,9 @@
 import SwiftUI
 
 struct ReportesView: View {
-    // TODO: cargar con obtenerReportes() dentro de un Task.
-    @State private var listaReportes = reportesDeMuestra()
+    @State private var listaReportes: [Reporte] = []
+    @State private var mostrarError = false
+    @State private var mensajeError = ""
 
     @State private var reporteSeleccionado: Reporte?
 
@@ -34,6 +35,18 @@ struct ReportesView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
+        }
+        // .task no se vio en clase: corre código asíncrono cuando aparece la pantalla.
+        .task {
+            do {
+                listaReportes = try await obtenerReportes()
+            } catch {
+                mensajeError = "No se pudo cargar la biblioteca de reportes. Revisa que estés conectado a la red de la universidad."
+                mostrarError.toggle()
+            }
+        }
+        .alert(mensajeError, isPresented: $mostrarError) {
+            Button("OK") {}
         }
     }
 
@@ -135,7 +148,8 @@ struct ReportesView: View {
                 ConfigurarReporteView(mostrandoConfigurar: $mostrandoConfigurar,
                                       mostrandoGenerado: $mostrandoGenerado,
                                       tipoElegido: $tipoElegido,
-                                      formatoElegido: $formatoElegido)
+                                      formatoElegido: $formatoElegido,
+                                      listaReportes: $listaReportes)
 
             } else if let reporte = reporteSeleccionado {
                 DetalleReporteView(reporte: reporte)

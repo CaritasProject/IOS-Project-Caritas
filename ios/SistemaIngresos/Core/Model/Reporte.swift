@@ -26,7 +26,7 @@ struct ConfiguracionReporte: Codable {
     var formato: String
 }
 
-// TODO: borrar cuando obtenerReportes() traiga datos reales.
+// Solo para los #Preview: la app carga los reportes desde la API.
 func reportesDeMuestra() -> [Reporte] {
     return [
         Reporte(id: 1, nombre: "Cobranza semanal · sem 34", fecha: "24 ago 2026",
