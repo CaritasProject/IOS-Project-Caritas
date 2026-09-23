@@ -13,7 +13,8 @@ from decimal import Decimal
 from pydantic import BaseModel, model_validator
 
 # Periodos que acepta el Picker de la pantalla de Metas (MetasView.swift).
-PERIODOS_VALIDOS = ("dia", "semana", "mes", "trimestre", "anio")
+# "ano" es el mismo año: lo usa el Resumen y se acepta para no tener dos nombres.
+PERIODOS_VALIDOS = ("dia", "semana", "mes", "trimestre", "anio", "ano")
 
 
 class AvanceMensual(BaseModel):
@@ -54,6 +55,8 @@ class ConsultaMetas(BaseModel):
         if self.desde and self.hasta and self.hasta < self.desde:
             raise ValueError("la fecha hasta no puede ser anterior a la fecha desde")
         periodo = self.periodo.strip().lower()
+        if periodo == "ano":
+            periodo = "anio"
         if periodo not in PERIODOS_VALIDOS:
             raise ValueError(
                 "el periodo debe ser " + ", ".join(PERIODOS_VALIDOS)
