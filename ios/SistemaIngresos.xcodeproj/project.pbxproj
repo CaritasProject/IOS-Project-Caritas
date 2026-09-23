@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C2B0000000000001META0001 /* MetaAvance.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B0000000000002META0002 /* MetaAvance.swift */; };
 		03236F1A61DFE827993BC4C0 /* DonantesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7863602C6ABD9F9BD2C4562 /* DonantesView.swift */; };
 		0745B5BCC14DCD68393DF2ED /* Formatos.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CCCBAC495F3B79B2395A770 /* Formatos.swift */; };
 		0D5C7014C77C9739584A61F3 /* Usuario.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BD3CE945FB2DD04D8C0E72C /* Usuario.swift */; };
@@ -57,6 +58,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		C2B0000000000002META0002 /* MetaAvance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetaAvance.swift; sourceTree = "<group>"; };
 		0291234F77EF2C72BFA88597 /* ConfigurarReporteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurarReporteView.swift; sourceTree = "<group>"; };
 		057A6FF83A984B3BB3FF9192 /* ReporteGeneradoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReporteGeneradoView.swift; sourceTree = "<group>"; };
 		16C0DE63423F5D33C6C17E39 /* DonantesService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DonantesService.swift; sourceTree = "<group>"; };
@@ -118,6 +120,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		C2B0000000000003META0003 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				C2B0000000000002META0002 /* MetaAvance.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
 		059196CCC3DB2DEFFDBE932A /* Views */ = {
 			isa = PBXGroup;
 			children = (
@@ -289,6 +299,7 @@
 		AA93F9D0097D068CFD37A49E /* Metas */ = {
 			isa = PBXGroup;
 			children = (
+				C2B0000000000003META0003 /* Model */,
 				C6766DD8A4CF5ECFCEE28A69 /* Services */,
 				059196CCC3DB2DEFFDBE932A /* Views */,
 			);
@@ -501,6 +512,7 @@
 				AED8669BA5A9D958B661BAB1 /* LoginView.swift in Sources */,
 				39FF409AE3BC2D400C320AF9 /* Meta.swift in Sources */,
 				A26C13525353634CDC115225 /* MetasService.swift in Sources */,
+				C2B0000000000001META0001 /* MetaAvance.swift in Sources */,
 				99E7E9D1E310F289F282BDEB /* MetasView.swift in Sources */,
 				59174FE7233F3E67E6A60D60 /* Palette.swift in Sources */,
 				EF4F1B747B876BFF34B7F465 /* Reporte.swift in Sources */,
