@@ -36,6 +36,11 @@ def crear_app() -> Flask:
         """Comprobación rápida de que la API responde."""
         return {"estado": "ok", "entorno": configuracion.entorno}
 
+    @app.get("/hello")
+    def hello():
+        """Ruta de verificación sin protección, para el monitoreo de la clase."""
+        return "Sistema de Ingresos - Caritas de Monterrey\n"
+
     return app
 
 
