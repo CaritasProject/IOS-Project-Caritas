@@ -6,6 +6,8 @@
 import SwiftUI
 
 struct LoginView: View {
+    @EnvironmentObject private var sesion: SesionService
+
     let textoCorreo = "nombre@caritas.org.mx"
 
     @State private var correo: String = ""
@@ -51,6 +53,8 @@ struct LoginView: View {
                         ZStack {
                             Color(red: 118/255, green: 118/255, blue: 128/255, opacity: 0.12)
                             TextField(textoCorreo, text: $correo)
+                                .textInputAutocapitalization(.never)
+                                .keyboardType(.emailAddress)
                                 .focused($campoEnFoco)
                                 .padding()
                         }
@@ -65,26 +69,45 @@ struct LoginView: View {
                         }
                         ZStack {
                             Color(red: 118/255, green: 118/255, blue: 128/255, opacity: 0.12)
-                            TextField("••••••••", text: $contrasena)
+                            SecureField("••••••••", text: $contrasena)
                                 .focused($campoEnFoco)
                                 .padding()
                         }
                         .frame(height: 56)
 
+                        //mensaje de error cuando el login falla
+                        if let mensaje = sesion.mensajeError {
+                            Spacer().frame(height: 12)
+                            HStack {
+                                Text(mensaje)
+                                    .font(.system(size: 13))
+                                    .foregroundStyle(.red)
+                                Spacer()
+                            }
+                        }
+
                         Spacer().frame(height: 20)
 
-                        Button("Iniciar sesión") {
+                        Button {
                             campoEnFoco = false
-                            print("Correo = \(correo)")
-                            print("Contraseña = \(contrasena)")
+                            Task {
+                                await sesion.iniciarSesion(correo: correo, password: contrasena)
+                            }
+                        } label: {
+                            if sesion.cargando {
+                                ProgressView()
+                            } else {
+                                Text("Iniciar sesión")
+                            }
                         }
                         .buttonStyle(.borderedProminent)
                         .tint(Color(red: 0/255, green: 152/255, blue: 174/255))
                         .frame(height: 50)
+                        .disabled(sesion.cargando)
                     }
                     .frame(width: 356)
                 }
-                .frame(width: 420, height: 360)
+                .frame(width: 420, height: 380)
 
                 Spacer().frame(height: 28)
 
@@ -100,4 +123,5 @@ struct LoginView: View {
 
 #Preview {
     LoginView()
+        .environmentObject(SesionService())
 }
