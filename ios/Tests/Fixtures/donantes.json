@@ -1,0 +1,40 @@
+[
+  {
+    "id": 1,
+    "nombre": "María Elena Treviño",
+    "segmento": "en_riesgo",
+    "estado": "activo",
+    "nivelRiesgo": "amarillo",
+    "montoTotal": 48600,
+    "ultimaDonacion": "2026-06-12T00:00:00Z",
+    "primeraDonacion": "2018-03-01T00:00:00Z",
+    "frecuencia": "Mensual · domiciliado",
+    "montoPromedio": 4050,
+    "acumulado12Meses": 48600,
+    "detalleEstado": "Dos cobros vencidos",
+    "pagos": [
+      { "id": 11, "date": "2026-08-10T00:00:00Z", "amount": 4050, "status": "rechazado" },
+      { "id": 12, "date": "2026-06-12T00:00:00Z", "amount": 4050, "status": "cobrado" },
+      { "id": 13, "date": "2026-09-10T00:00:00Z", "amount": 4050, "status": "pendiente" }
+    ],
+    "llamadas": [
+      { "id": 15, "date": "2026-08-15T00:00:00Z", "result": "Llamada realizada", "notes": "Confirmó que realizará el pago la próxima semana." }
+    ]
+  },
+  {
+    "id": 2,
+    "nombre": "Comercializadora del Norte",
+    "segmento": "alto_valor",
+    "estado": "activo",
+    "nivelRiesgo": "verde",
+    "montoTotal": 264000,
+    "ultimaDonacion": "2026-07-02T00:00:00Z",
+    "primeraDonacion": "2017-11-01T00:00:00Z",
+    "frecuencia": "Trimestral",
+    "montoPromedio": 66000,
+    "acumulado12Meses": 264000,
+    "detalleEstado": "Donante de alto valor",
+    "pagos": [],
+    "llamadas": []
+  }
+]

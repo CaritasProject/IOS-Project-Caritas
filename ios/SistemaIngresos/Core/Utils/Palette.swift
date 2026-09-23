@@ -19,6 +19,7 @@ enum Palette {
     /// Semáforo de riesgo del donante.
     static let riesgoAlto  = Color(red: 0.84, green: 0.19, blue: 0.19)
     static let riesgoMedio = Color(red: 0.96, green: 0.62, blue: 0.04)
+    static let riesgoElevado = Color(red: 0.93, green: 0.39, blue: 0.08)
     static let riesgoBajo  = Color(red: 0.13, green: 0.70, blue: 0.29)
 
     // TODO: agregar los tonos secundarios cuando los defina el equipo de diseño.

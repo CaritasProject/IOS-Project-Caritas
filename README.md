@@ -1,4 +1,4 @@
-# Sistema de Ingresos — Cáritas de Monterrey, A.B.P.
+# Sistema de Ingresos - Cáritas de Monterrey, A.B.P.
 
 App iOS (SwiftUI, iPad Pro horizontal) y API REST en Python para el área de
 **Procuración de Fondos**. Vista de **Administrador**. Base de datos: SQL Server.
