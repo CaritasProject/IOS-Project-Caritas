@@ -356,8 +356,6 @@ INSERT INTO dbo.META (ID_ASIGNACION, FECHA_INICIO, FECHA_FIN, MONTO_META) VALUES
 /* =============================================================================
    HISTORIAL DE REPORTES (biblioteca del prototipo, solo parámetros)
 ============================================================================= */
--- Generados por la administradora (usuario 1). Alcance: todas las líneas y
--- campañas, así que no llevan filas en REPORTE_LINEA_ESTRATEGICA ni en REPORTE_CAMPANA_FINANCIERA.
 INSERT INTO dbo.HISTORIAL_REPORTE (ID_TIPO_REPORTE, ID_FORMATO, ID_USUARIO, FECHA_DESDE, FECHA_HASTA, FECHA_GENERACION) VALUES
     (2, 1, 1, '2026-08-17', '2026-08-23', '2026-08-24 08:00:00'),
     (2, 1, 1, '2026-08-10', '2026-08-16', '2026-08-17 08:00:00'),
