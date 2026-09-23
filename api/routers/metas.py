@@ -227,14 +227,8 @@ def base_no_disponible(_):
 
 # ---------------------------------------------------------------- endpoints
 
-@bp.get("")
-def listar_metas():
-    """Metas del periodo con su avance. GET /metas?periodo=trimestre"""
-    try:
-        desde, hasta = leer_parametros()
-    except ValidationError as e:
-        return error(e.errors()[0]["msg"].removeprefix("Value error, "), 400)
-
+def metas_del_periodo(desde: date, hasta: date):
+    """Arma la respuesta de la lista. La usan las dos rutas del listado."""
     cursor = obtener_conexion().cursor()
     cursor.execute(CONSULTA_METAS + " ORDER BY a.NOMBRE", desde, hasta)
     filas = cursor.fetchall()
@@ -245,6 +239,32 @@ def listar_metas():
         "hasta": hasta.isoformat(),
         "metas": [fila_a_json(f, mensuales.get(f.ID_META, [])) for f in filas],
     })
+
+
+@bp.get("")
+def listar_metas():
+    """Metas del periodo. GET /metas?periodo=trimestre (o ?desde=&hasta=)"""
+    try:
+        desde, hasta = leer_parametros()
+    except ValidationError as e:
+        return error(e.errors()[0]["msg"].removeprefix("Value error, "), 400)
+    return metas_del_periodo(desde, hasta)
+
+
+@bp.get("/periodo/<periodo>")
+def listar_metas_por_periodo(periodo: str):
+    """Misma lista, con el periodo en la ruta. GET /metas/periodo/trimestre
+
+    La app la consume por aquí: APIClient arma la URL con appending(path:),
+    que escapa el "?", así que un query string no le llega al servidor.
+    Es la misma forma que usa /resumen/kpis/<periodo>.
+    """
+    try:
+        consulta = ConsultaMetas.model_validate({"periodo": periodo})
+    except ValidationError as e:
+        return error(e.errors()[0]["msg"].removeprefix("Value error, "), 400)
+    desde, hasta = ventana_del_periodo(consulta.periodo, date.today())
+    return metas_del_periodo(desde, hasta)
 
 
 @bp.get("/<int:id_meta>")
