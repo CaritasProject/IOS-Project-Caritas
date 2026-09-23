@@ -2,7 +2,6 @@ import SwiftUI
 
 struct BarraSuperior: View {
     let titulo: String
-    let iniciales: String
     @Binding var periodoSeleccionado: Int
 
     var body: some View {
@@ -18,13 +17,7 @@ struct BarraSuperior: View {
 
             Spacer()
 
-            Text(iniciales)
-                .font(.system(size: 14))
-                .fontWeight(.semibold)
-                .foregroundColor(paletaResumen.superficie)
-                .frame(width: 38, height: 38)
-                .background(paletaResumen.turquesa)
-                .clipShape(.circle)
+            AvatarUsuario(tamano: 38)
         }
         .padding(.horizontal, 24)
         .frame(height: 64)
@@ -35,6 +28,6 @@ struct BarraSuperior: View {
 
 #Preview {
     BarraSuperior(titulo: "Resumen",
-                  iniciales: "MG",
                   periodoSeleccionado: .constant(2))
+        .environmentObject(SesionService())
 }

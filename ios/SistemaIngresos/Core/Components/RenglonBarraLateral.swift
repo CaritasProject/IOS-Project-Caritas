@@ -18,13 +18,14 @@ struct RenglonBarraLateral: View {
 
                 Spacer()
             }
-            .foregroundColor(seleccionado ? paletaResumen.turquesa : paletaResumen.texto)
+            .foregroundColor(seleccionado ? Palette.turquesa : Palette.texto)
             .padding(.horizontal, 16)
             .frame(height: 44)
             .background(
                 RoundedRectangle(cornerRadius: 22)
-                    .fill(seleccionado ? paletaResumen.turquesaSuave : Color.clear)
+                    .fill(seleccionado ? Palette.turquesaSuave : Color.clear)
             )
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
@@ -38,5 +39,5 @@ struct RenglonBarraLateral: View {
                             seleccionado: false, accion: {})
     }
     .padding()
-    .background(paletaResumen.fondo)
+    .background(Palette.fondo)
 }

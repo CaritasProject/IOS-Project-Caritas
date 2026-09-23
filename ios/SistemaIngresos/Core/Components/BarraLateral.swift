@@ -1,7 +1,8 @@
 import SwiftUI
 
 struct BarraLateral: View {
-    @State private var seccionSeleccionada: Int = 0
+    @EnvironmentObject private var sesion: SesionService
+    @Binding var seccionSeleccionada: Int
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -14,7 +15,7 @@ struct BarraLateral: View {
 
             Text("Sistema de Ingresos")
                 .font(.system(size: 13))
-                .foregroundColor(paletaResumen.textoSecundario)
+                .foregroundColor(Palette.textoSecundario)
                 .padding(.top, 8)
 
             VStack(spacing: 4) {
@@ -25,7 +26,7 @@ struct BarraLateral: View {
                 }
 
                 RenglonBarraLateral(titulo: "Donantes",
-                                    icono: "person.crop.circle",
+                                    icono: "person.2",
                                     seleccionado: seccionSeleccionada == 1) {
                     seccionSeleccionada = 1
                 }
@@ -37,7 +38,7 @@ struct BarraLateral: View {
                 }
 
                 RenglonBarraLateral(titulo: "Metas",
-                                    icono: "safari",
+                                    icono: "target",
                                     seleccionado: seccionSeleccionada == 3) {
                     seccionSeleccionada = 3
                 }
@@ -46,18 +47,33 @@ struct BarraLateral: View {
 
             Spacer()
 
-            Text("Datos de demostración")
-                .font(.system(size: 12))
-                .foregroundColor(paletaResumen.textoSecundario)
-                .padding(.bottom, 24)
+            HStack(spacing: 12) {
+                AvatarUsuario()
+
+                if let usuario = sesion.usuario {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(usuario.nombre)
+                            .font(.system(size: 15))
+                            .fontWeight(.semibold)
+                            .foregroundColor(Palette.texto)
+                            .lineLimit(1)
+
+                        Text(usuario.rol.capitalized)
+                            .font(.system(size: 13))
+                            .foregroundColor(Palette.textoSecundario)
+                    }
+                }
+            }
+            .padding(.bottom, 24)
         }
         .padding(.horizontal, 20)
         .frame(width: 300)
         .frame(maxHeight: .infinity)
-        .background(paletaResumen.fondo)
+        .background(Palette.fondo)
     }
 }
 
 #Preview {
-    BarraLateral()
+    BarraLateral(seccionSeleccionada: .constant(0))
+        .environmentObject(SesionService())
 }

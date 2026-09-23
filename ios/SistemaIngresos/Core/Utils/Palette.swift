@@ -22,5 +22,10 @@ enum Palette {
     static let riesgoElevado = Color(red: 0.93, green: 0.39, blue: 0.08)
     static let riesgoBajo  = Color(red: 0.13, green: 0.70, blue: 0.29)
 
+    static let turquesaSuave   = Color(red: 0.83, green: 0.91, blue: 0.92)
+    static let texto           = Color(red: 0.15, green: 0.15, blue: 0.17)
+    static let textoSecundario = Color(red: 0.45, green: 0.45, blue: 0.50)
+    static let separador       = Color(red: 0.87, green: 0.87, blue: 0.90)
+
     // TODO: agregar los tonos secundarios cuando los defina el equipo de diseño.
 }

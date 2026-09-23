@@ -2,7 +2,7 @@
 //  ContentView.swift
 //  Sistema de Ingresos — Cáritas de Monterrey, A.B.P.
 //
-//  ARCHIVO COMPARTIDO: navegación principal (TabView con las 5 pestañas).
+//  ARCHIVO COMPARTIDO: navegación principal (barra lateral con las 4 secciones).
 //  Cada integrante conecta aquí SU pantalla y no toca las de los demás.
 //  Avisa al equipo antes de modificarlo.
 //
@@ -12,46 +12,42 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject private var sesion: SesionService
 
-    // Pestaña seleccionada. Por defecto entra en Resumen.
-    @State private var pestanaSeleccionada: Int = 1
+    @State private var seccionSeleccionada: Int = 0
 
     var body: some View {
-        // Sin sesión iniciada se ve el login; con sesión, las pestañas.
         if !sesion.sesionIniciada {
             LoginView()
         } else {
-            pestanas
+            principal
         }
     }
 
-    private var pestanas: some View {
-        TabView(selection: $pestanaSeleccionada) {
+    private var principal: some View {
+        HStack(spacing: 0) {
+            BarraLateral(seccionSeleccionada: $seccionSeleccionada)
 
-            ResumenView()
-                .tabItem {
-                    Label("Resumen", systemImage: "house")
-                }
-                .tag(1)
+            Rectangle()
+                .fill(Palette.separador)
+                .frame(width: 1)
 
-            DonantesView()
-                .tabItem {
-                    Label("Donantes", systemImage: "person.2")
-                }
-                .tag(2)
-
-            ReportesView()
-                .tabItem {
-                    Label("Reportes", systemImage: "folder")
-                }
-                .tag(3)
-
-            MetasView()
-                .tabItem {
-                    Label("Metas", systemImage: "target")
-                }
-                .tag(4)
+            pantalla
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .tint(Palette.turquesa)
+        .background(Palette.fondo.ignoresSafeArea())
+    }
+
+    @ViewBuilder
+    private var pantalla: some View {
+        switch seccionSeleccionada {
+        case 1:
+            DonantesView()
+        case 2:
+            ReportesView()
+        case 3:
+            MetasView()
+        default:
+            ResumenView()
+        }
     }
 }
 

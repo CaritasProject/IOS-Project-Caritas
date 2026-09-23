@@ -70,13 +70,7 @@ struct ReportesView: View {
 
             Spacer()
 
-            Text("MG")
-                .font(.subheadline)
-                .fontWeight(.semibold)
-                .foregroundColor(.white)
-                .frame(width: 40, height: 40)
-                .background(Palette.turquesa)
-                .clipShape(.circle)
+            AvatarUsuario()
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
@@ -182,4 +176,5 @@ struct ReportesView: View {
 
 #Preview {
     ReportesView()
+        .environmentObject(SesionService())
 }
