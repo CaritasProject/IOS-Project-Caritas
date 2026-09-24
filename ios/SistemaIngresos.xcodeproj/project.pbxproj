@@ -13,9 +13,7 @@
 		E1A0000000000000000000A2 /* AvatarUsuario.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A0000000000000000000A1 /* AvatarUsuario.swift */; };
 		C2B0000000000001META0001 /* MetaAvance.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B0000000000002META0002 /* MetaAvance.swift */; };
 		03236F1A61DFE827993BC4C0 /* DonantesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7863602C6ABD9F9BD2C4562 /* DonantesView.swift */; };
-		0745B5BCC14DCD68393DF2ED /* Formatos.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CCCBAC495F3B79B2395A770 /* Formatos.swift */; };
 		0D5C7014C77C9739584A61F3 /* Usuario.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BD3CE945FB2DD04D8C0E72C /* Usuario.swift */; };
-		1526DCE301347EF20D8DC62F /* Donativo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24A8B392F332C7CB09CB783E /* Donativo.swift */; };
 		1594746873D83D55C696ACE6 /* ReportesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 906548EAD5E41E16085B64B1 /* ReportesService.swift */; };
 		1C1FEAF693BC5B88C3C1DCE0 /* ReporteGeneradoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 057A6FF83A984B3BB3FF9192 /* ReporteGeneradoView.swift */; };
 		28DB7F3DC79EF71405C80253 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2617AF24BEB8ACC9EE2FA114 /* Assets.xcassets */; };
@@ -47,15 +45,12 @@
 		A26C13525353634CDC115225 /* MetasService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0B33EC1495C81138890CAB /* MetasService.swift */; };
 		A6BA59BCBFC999A72B232036 /* SistemaIngresosApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E68A707BE2009EE0E6E33CF7 /* SistemaIngresosApp.swift */; };
 		AED8669BA5A9D958B661BAB1 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83E1910E5E5F1417380F5F24 /* LoginView.swift */; };
-		B7200092F9C46D4B5071B467 /* BotonPrimario.swift in Sources */ = {isa = PBXBuildFile; fileRef = A05368894E3D4A3BD4A9E212 /* BotonPrimario.swift */; };
 		C92035ACD930815A1CD7D1FC /* TarjetaDatoReporte.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACFA1D0C396EB4B14D7DE39F /* TarjetaDatoReporte.swift */; };
 		D01100000000000000000001 /* DonanteRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D01100000000000000000002 /* DonanteRow.swift */; };
-		DA0C63FD34BFB0D0EA639A2C /* TarjetaResumen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B52D97430E6064D1A6D701A /* TarjetaResumen.swift */; };
 		E02650E5B2A9540966C8310F /* ReportesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5599958E8812D9FA08E613E6 /* ReportesView.swift */; };
 		E06DCF55F633B22BBA8FF1F7 /* SesionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 215ABA9C4074F255CEDF1100 /* SesionService.swift */; };
 		E1C86DAC5D89E836B0E62B66 /* ResumenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC37CF20A2D411AF628130FF /* ResumenView.swift */; };
 		EF4F1B747B876BFF34B7F465 /* Reporte.swift in Sources */ = {isa = PBXBuildFile; fileRef = B73488F3AA9C4FD7ABFE2063 /* Reporte.swift */; };
-		F4615B37D0CDB40A6501E68D /* SemaforoRiesgo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90B36FD551FA0505A2F450A5 /* SemaforoRiesgo.swift */; };
 		F657BFF63EA63381F95D00D2 /* DetalleReporteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F46F6FB92DAF54335DD5811A /* DetalleReporteView.swift */; };
 		F6D454E57A9623836DF8572B /* ReporteRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35311DEC6086E3EF4B176D0C /* ReporteRow.swift */; };
 /* End PBXBuildFile section */
@@ -70,21 +65,17 @@
 		057A6FF83A984B3BB3FF9192 /* ReporteGeneradoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReporteGeneradoView.swift; sourceTree = "<group>"; };
 		16C0DE63423F5D33C6C17E39 /* DonantesService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DonantesService.swift; sourceTree = "<group>"; };
 		215ABA9C4074F255CEDF1100 /* SesionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SesionService.swift; sourceTree = "<group>"; };
-		24A8B392F332C7CB09CB783E /* Donativo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Donativo.swift; sourceTree = "<group>"; };
 		2617AF24BEB8ACC9EE2FA114 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2D0B33EC1495C81138890CAB /* MetasService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetasService.swift; sourceTree = "<group>"; };
 		35311DEC6086E3EF4B176D0C /* ReporteRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReporteRow.swift; sourceTree = "<group>"; };
 		3BD3CE945FB2DD04D8C0E72C /* Usuario.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Usuario.swift; sourceTree = "<group>"; };
 		4602D31630D126BD0949188C /* Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Palette.swift; sourceTree = "<group>"; };
-		4B52D97430E6064D1A6D701A /* TarjetaResumen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TarjetaResumen.swift; sourceTree = "<group>"; };
 		4FD719E16132CF1474F99727 /* Donante.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Donante.swift; sourceTree = "<group>"; };
 		5599958E8812D9FA08E613E6 /* ReportesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportesView.swift; sourceTree = "<group>"; };
 		6CDD2C55FBD182A1332D8766 /* MetasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetasView.swift; sourceTree = "<group>"; };
 		83E1910E5E5F1417380F5F24 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
-		8CCCBAC495F3B79B2395A770 /* Formatos.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Formatos.swift; sourceTree = "<group>"; };
 		8D2757FF5F1CB495211EC331 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		906548EAD5E41E16085B64B1 /* ReportesService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportesService.swift; sourceTree = "<group>"; };
-		90B36FD551FA0505A2F450A5 /* SemaforoRiesgo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SemaforoRiesgo.swift; sourceTree = "<group>"; };
 		914AA8C530642E71006526CE /* .gitkeep */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitkeep; sourceTree = "<group>"; };
 		914AA8C630642E71006526CE /* BarraLateral.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarraLateral.swift; sourceTree = "<group>"; };
 		914AA8C730642E71006526CE /* BarraSuperior.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarraSuperior.swift; sourceTree = "<group>"; };
@@ -100,7 +91,6 @@
 		914AA8E030642E76006526CE /* PaletaResumen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaletaResumen.swift; sourceTree = "<group>"; };
 		C1A0000000000001RESUMEN /* ResumenKPIs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResumenKPIs.swift; sourceTree = "<group>"; };
 		C1A0000000000003RESUMEN /* FormatosResumen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormatosResumen.swift; sourceTree = "<group>"; };
-		A05368894E3D4A3BD4A9E212 /* BotonPrimario.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BotonPrimario.swift; sourceTree = "<group>"; };
 		A7863602C6ABD9F9BD2C4562 /* DonantesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DonantesView.swift; sourceTree = "<group>"; };
 		A7B8EFB10C4021497743926F /* ResumenService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResumenService.swift; sourceTree = "<group>"; };
 		ACFA1D0C396EB4B14D7DE39F /* TarjetaDatoReporte.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TarjetaDatoReporte.swift; sourceTree = "<group>"; };
@@ -218,7 +208,6 @@
 			isa = PBXGroup;
 			children = (
 				4FD719E16132CF1474F99727 /* Donante.swift */,
-				24A8B392F332C7CB09CB783E /* Donativo.swift */,
 				F44BE599383E8FDE422A06D1 /* Meta.swift */,
 				B73488F3AA9C4FD7ABFE2063 /* Reporte.swift */,
 				3BD3CE945FB2DD04D8C0E72C /* Usuario.swift */,
@@ -292,7 +281,6 @@
 		A9B1CDED2415F46124B2890D /* Utils */ = {
 			isa = PBXGroup;
 			children = (
-				8CCCBAC495F3B79B2395A770 /* Formatos.swift */,
 				4602D31630D126BD0949188C /* Palette.swift */,
 			);
 			path = Utils;
@@ -357,12 +345,9 @@
 			isa = PBXGroup;
 			children = (
 				E1A0000000000000000000A1 /* AvatarUsuario.swift */,
-				A05368894E3D4A3BD4A9E212 /* BotonPrimario.swift */,
 				914AA8C630642E71006526CE /* BarraLateral.swift */,
 				914AA8C730642E71006526CE /* BarraSuperior.swift */,
 				914AA8CA30642E71006526CE /* RenglonBarraLateral.swift */,
-				90B36FD551FA0505A2F450A5 /* SemaforoRiesgo.swift */,
-				4B52D97430E6064D1A6D701A /* TarjetaResumen.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -495,7 +480,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				4D9D13D9F751D25972DC7688 /* APIClient.swift in Sources */,
-				B7200092F9C46D4B5071B467 /* BotonPrimario.swift in Sources */,
 				9347588957DB2C01F08AEE36 /* ConfigurarReporteView.swift in Sources */,
 				95A1C02727D3E205038F0A8B /* ContentView.swift in Sources */,
 				F657BFF63EA63381F95D00D2 /* DetalleReporteView.swift in Sources */,
@@ -514,8 +498,6 @@
 				914AA8DD30642E71006526CE /* BarraLateral.swift in Sources */,
 				914AA8DE30642E71006526CE /* TarjetaTelemarketing.swift in Sources */,
 				D01100000000000000000001 /* DonanteRow.swift in Sources */,
-				1526DCE301347EF20D8DC62F /* Donativo.swift in Sources */,
-				0745B5BCC14DCD68393DF2ED /* Formatos.swift in Sources */,
 				676B526BCE6BB718E6784327 /* LoginService.swift in Sources */,
 				E1A0000000000000000000D2 /* VistaPreviaReporte.swift in Sources */,
 				E1A0000000000000000000C2 /* BotonCompartirReporte.swift in Sources */,
@@ -537,11 +519,9 @@
 				C1A0000000000004RESUMEN /* FormatosResumen.swift in Sources */,
 				549A3B72EFBFC922E1A8F240 /* ResumenService.swift in Sources */,
 				E1C86DAC5D89E836B0E62B66 /* ResumenView.swift in Sources */,
-				F4615B37D0CDB40A6501E68D /* SemaforoRiesgo.swift in Sources */,
 				E06DCF55F633B22BBA8FF1F7 /* SesionService.swift in Sources */,
 				A6BA59BCBFC999A72B232036 /* SistemaIngresosApp.swift in Sources */,
 				C92035ACD930815A1CD7D1FC /* TarjetaDatoReporte.swift in Sources */,
-				DA0C63FD34BFB0D0EA639A2C /* TarjetaResumen.swift in Sources */,
 				0D5C7014C77C9739584A61F3 /* Usuario.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

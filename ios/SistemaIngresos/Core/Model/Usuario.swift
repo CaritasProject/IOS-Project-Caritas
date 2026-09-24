@@ -10,8 +10,6 @@ struct Usuario: Identifiable, Codable {
     let id: Int
     let nombre: String
     let correo: String
-    let rol: String        // "Administrador", "Capturista", "Consulta"
+    let rol: String        // "ADMINISTRADOR", "TELEFONISTA", "RECOLECTOR"
     let area: String       // "Dirección General", "Procuración de Fondos"
-
-    // TODO: completar con último acceso.
 }
