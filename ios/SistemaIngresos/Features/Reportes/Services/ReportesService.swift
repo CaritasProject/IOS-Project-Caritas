@@ -8,7 +8,6 @@ func obtenerReportes() async throws -> [Reporte] {
         throw URLError(.badURL)
     }
 
-    // Usamos URLRequest (como en el POST) para poder mandar el token de la sesión.
     var request = URLRequest(url: url)
     if let token = APIClient.tokenSesion {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
@@ -37,7 +36,6 @@ func obtenerReporte(idReporte: Int) async throws -> Reporte {
         throw URLError(.badURL)
     }
 
-    // Usamos URLRequest (como en el POST) para poder mandar el token de la sesión.
     var request = URLRequest(url: url)
     if let token = APIClient.tokenSesion {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
