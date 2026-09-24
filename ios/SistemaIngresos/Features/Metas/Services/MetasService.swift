@@ -1,9 +1,7 @@
 //
 //  MetasService.swift
-//  Features / Metas — Dueño: Persona 5.
+//  Features / Metas — Hector FDz.
 //
-//  Aquí vive la llamada a /metas. Ninguna View instancia URLSession
-//  ni decodifica JSON por su cuenta.
 //
 
 import Foundation
@@ -23,8 +21,6 @@ final class MetasService: ObservableObject {
         self.ruta = ruta
     }
 
-    /// GET /metas/periodo/<periodo>. El periodo va en la ruta y no como query
-    /// porque APIClient arma la URL con appending(path:), que escapa el "?".
     func cargar(periodo: Periodo) async {
         guard !cargando else { return }
         cargando = true
@@ -42,7 +38,6 @@ final class MetasService: ObservableObject {
         }
     }
 
-    /// Solo para #Preview: datos fijos, sin tocar la red.
     static var previsualizacion: MetasService {
         let servicio = MetasService()
         servicio.metas = MetaAvance.muestra

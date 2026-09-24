@@ -1,10 +1,7 @@
 //
 //  MetaAvance.swift
-//  Features / Metas / Model — Dueño: Persona 5.
+//  Features / Metas / Model — Hector Fdz
 //
-//  Modelo local de la pantalla. Se llama MetaAvance para no chocar con el
-//  modelo compartido Core/Model/Meta.swift.
-//  Las llaves son las que devuelve GET /metas del blueprint routers/metas.py.
 //
 
 import SwiftUI
@@ -13,17 +10,16 @@ struct MetaAvance: Identifiable, Codable {
     let id: Int
     let nombre: String
     let lineaEstrategica: String
-    let objetivo: Double        // prorrateado al periodo consultado
-    let objetivoTotal: Double   // monto completo de la meta
+    let objetivo: Double
+    let objetivoTotal: Double
     let comprometido: Double
     let cobrado: Double
     let faltante: Double
     let porcentaje: Int
-    let semaforo: String        // "verde", "amarillo", "rojo"
+    let semaforo: String
     let donantes: Int
     let mensual: [MesAvance]
 
-    /// El color del semáforo lo decide la API; aquí solo se traduce a la paleta.
     var color: Color {
         switch semaforo {
         case "verde": Palette.riesgoBajo
@@ -39,25 +35,21 @@ struct MesAvance: Identifiable, Codable {
     let nombre: String
     let monto: Double
 
-    // Compuesto, no se decodifica: un mes es único dentro de su año.
     var id: String { "\(anio)-\(mes)" }
 }
 
-/// Una rebanada de la dona de avance.
 struct Rebanada: Identifiable {
     let id: Int
     let categoria: String
     let valor: Double
 }
 
-/// Envoltura de GET /metas: el rango consultado más las metas.
 struct RespuestaMetas: Codable {
     let desde: String
     let hasta: String
     let metas: [MetaAvance]
 }
 
-/// Opciones del Picker. El rawValue es lo que espera la API en la ruta.
 enum Periodo: String, CaseIterable, Identifiable {
     case dia, semana, mes, trimestre, anio
 
@@ -75,7 +67,6 @@ enum Periodo: String, CaseIterable, Identifiable {
 }
 
 extension MetaAvance {
-    /// Solo para #Preview. La pantalla real siempre lee de la API.
     static let muestra: [MetaAvance] = [
         MetaAvance(id: 1, nombre: "Banco De Alimentos", lineaEstrategica: "Telemarketing",
                    objetivo: 820000, objetivoTotal: 820000, comprometido: 742000,
@@ -106,3 +97,5 @@ extension MetaAvance {
                    ])
     ]
 }
+
+

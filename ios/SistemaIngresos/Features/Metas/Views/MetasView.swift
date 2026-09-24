@@ -1,9 +1,6 @@
 //
 //  MetasView.swift
-//  Features / Metas — Dueño: Persona 5.
-//
-//  Solo presenta. Los datos los trae MetasService desde /metas.
-//  Los modelos viven en Features/Metas/Model/MetaAvance.swift.
+//  Features / Metas Hector Fdz
 //
 
 import SwiftUI
@@ -13,15 +10,12 @@ struct MetasView: View {
 
     @StateObject private var servicio: MetasService
     @State private var periodo: Periodo = .trimestre
-    // Se guarda el ID de la meta, nunca su posición en el arreglo:
-    // los ID_META de la base empiezan en 1 y no son índices.
     @State private var metaSeleccionadaID: Int?
 
     init(servicio: MetasService = MetasService()) {
         _servicio = StateObject(wrappedValue: servicio)
     }
 
-    /// Si la meta elegida ya no está en el periodo actual, cae en la primera.
     private var metaSeleccionada: MetaAvance? {
         servicio.metas.first { $0.id == metaSeleccionadaID } ?? servicio.metas.first
     }
@@ -45,7 +39,6 @@ struct MetasView: View {
         }
     }
 
-    // MARK: - Encabezado
 
     private var encabezado: some View {
         HStack {
@@ -71,7 +64,6 @@ struct MetasView: View {
         .background(Palette.superficie)
     }
 
-    // MARK: - Lista de metas
 
     private var listaMetas: some View {
         ScrollView {
@@ -147,7 +139,6 @@ struct MetasView: View {
         .contentShape(Rectangle())
     }
 
-    // MARK: - Detalle
 
     @ViewBuilder
     private var detalle: some View {
@@ -286,7 +277,6 @@ struct MetasView: View {
         .cornerRadius(15)
     }
 
-    // MARK: - Utilidades
 
     private func datosPastel(_ meta: MetaAvance) -> [Rebanada] {
         [
