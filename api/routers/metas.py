@@ -11,7 +11,11 @@ De dónde sale cada número que muestra MetasView.swift:
   - comprometido  SUM(IMPORTE) de los cobros programados (FECHA_COBRO) del
                   periodo, cobrados o no.
   - donantes      donantes distintos con al menos un pago cobrado en el periodo.
-  - mensual       el mismo cobrado agrupado por mes, para la gráfica de barras.
+  - avance        el mismo cobrado repartido en barras para la gráfica: por día
+                  si el periodo es una semana, por semana si es un mes y por mes
+                  si es más largo. FECHA_PAGO es DATE, sin hora, así que el
+                  periodo "dia" es una sola barra.
+  - agrupacion    de qué tamaño es cada barra (hoy, diario, semanal, mensual).
 
 Las llaves del JSON van en camelCase porque son las que espera la app.
 """
@@ -30,13 +34,13 @@ from models.meta import ConsultaMetas
 
 bp = Blueprint("metas", __name__, url_prefix="/metas")
 
-MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio",
-         "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+MESES_CORTOS = ["Ene", "Feb", "Mar", "Abr", "May", "Jun",
+                "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
 
-# Umbrales del semáforo de la pantalla.
+DIAS_CORTOS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
+
 VERDE, AMARILLO = 75, 60
 
-# Una fila por meta, ya cruzada con el periodo que se consulta.
 CONSULTA_METAS = """
 WITH VENTANA AS (
     SELECT CAST(? AS DATE) AS DESDE, CAST(? AS DATE) AS HASTA
@@ -95,11 +99,9 @@ OUTER APPLY (
 WHERE r.INICIO <= r.FIN
 """
 
-# Cobrado por mes para la gráfica de barras.
-CONSULTA_MENSUAL = """
+CONSULTA_AVANCE = """
 SELECT m.ID_META,
-       YEAR(b.FECHA_PAGO)  AS ANIO,
-       MONTH(b.FECHA_PAGO) AS MES,
+       b.FECHA_PAGO AS FECHA,
        SUM(b.IMPORTE_COBRADO) AS MONTO
 FROM dbo.META m
 JOIN dbo.OPE_DONATIVOS_DONANTE d          ON d.ID_ASIGNACION = m.ID_ASIGNACION
@@ -108,11 +110,10 @@ JOIN dbo.CAT_ESTATUS_PAGO e               ON e.ID_ESTATUS_PAGO = b.ESTATUS_PAGO
 WHERE e.NOMBRE = N'COBRADO'
   AND b.FECHA_PAGO BETWEEN ? AND ?
   AND b.FECHA_PAGO BETWEEN m.FECHA_INICIO AND m.FECHA_FIN
-GROUP BY m.ID_META, YEAR(b.FECHA_PAGO), MONTH(b.FECHA_PAGO)
+GROUP BY m.ID_META, b.FECHA_PAGO
 """
 
 
-# ---------------------------------------------------------------- utilidades
 
 def error(mensaje: str, codigo: int):
     return jsonify({"error": mensaje}), codigo
@@ -148,13 +149,40 @@ def semaforo(porcentaje: int) -> str:
     return "rojo"
 
 
-def meses_del_rango(desde: date, hasta: date) -> list[tuple[int, int]]:
-    """[(2026, 7), (2026, 8), (2026, 9)] para que la gráfica no salte meses."""
-    meses, anio, mes = [], desde.year, desde.month
-    while (anio, mes) <= (hasta.year, hasta.month):
-        meses.append((anio, mes))
-        anio, mes = (anio + 1, 1) if mes == 12 else (anio, mes + 1)
-    return meses
+def agrupacion_del_rango(desde: date, hasta: date) -> str:
+    """De qué tamaño es cada barra de la gráfica, según lo largo del rango."""
+    total = dias(desde, hasta)
+    if total == 1:
+        return "hoy"
+    if total <= 7:
+        return "diario"
+    if total <= 31:
+        return "semanal"
+    return "mensual"
+
+
+def tramo_de_fecha(agrupacion: str, fecha: date) -> tuple:
+    """(clave, etiqueta) de la barra donde cae la fecha."""
+    if agrupacion == "hoy":
+        return fecha, f"{fecha.day} {MESES_CORTOS[fecha.month - 1]}"
+    if agrupacion == "diario":
+        return fecha, f"{DIAS_CORTOS[fecha.weekday()]} {fecha.day}"
+    if agrupacion == "semanal":
+        lunes = fecha - timedelta(days=fecha.weekday())
+        return lunes, f"Sem {fecha.isocalendar()[1]}"
+    return (fecha.year, fecha.month), MESES_CORTOS[fecha.month - 1]
+
+
+def tramos_del_rango(agrupacion: str, desde: date, hasta: date) -> dict:
+    """Todas las barras del rango, en orden, para que la gráfica no salte huecos."""
+    tramos = {}
+    fecha = desde
+    while fecha <= hasta:
+        clave, etiqueta = tramo_de_fecha(agrupacion, fecha)
+        if clave not in tramos:
+            tramos[clave] = etiqueta
+        fecha += timedelta(days=1)
+    return tramos
 
 
 def numero(valor) -> float:
@@ -171,7 +199,7 @@ def objetivo_prorrateado(fila) -> Decimal:
     return fila.MONTO_META * Decimal(dias_traslape) / Decimal(dias_meta)
 
 
-def fila_a_json(fila, mensual: list[dict]) -> dict:
+def fila_a_json(fila, avance: list[dict], agrupacion: str) -> dict:
     objetivo = objetivo_prorrateado(fila)
     cobrado = fila.COBRADO or Decimal(0)
     porcentaje = int((cobrado / objetivo * 100).to_integral_value()) if objetivo else 0
@@ -185,12 +213,12 @@ def fila_a_json(fila, mensual: list[dict]) -> dict:
         "objetivoTotal": numero(fila.MONTO_META),
         "comprometido": numero(fila.COMPROMETIDO),
         "cobrado": numero(cobrado),
-        # Nunca negativo: una meta rebasada muestra 0 faltante, no un hueco en la dona.
         "faltante": round(max(numero(objetivo) - numero(cobrado), 0.0), 2),
         "porcentaje": porcentaje,
         "semaforo": semaforo(porcentaje),
         "donantes": fila.DONANTES,
-        "mensual": mensual,
+        "agrupacion": agrupacion,
+        "avance": avance,
     }
 
 
@@ -202,21 +230,24 @@ def leer_parametros():
     return ventana_del_periodo(consulta.periodo, date.today())
 
 
-def avances_mensuales(cursor, desde: date, hasta: date) -> dict[int, list[dict]]:
-    """Cobrado por mes de cada meta, con los meses vacíos en cero."""
-    cursor.execute(CONSULTA_MENSUAL, desde, hasta)
-    montos = {(f.ID_META, f.ANIO, f.MES): f.MONTO for f in cursor.fetchall()}
+def avances(cursor, agrupacion: str, desde: date, hasta: date) -> dict[int, list[dict]]:
+    """Cobrado de cada meta repartido en las barras del rango, con las vacías en cero."""
+    cursor.execute(CONSULTA_AVANCE, desde, hasta)
+    montos: dict[tuple, Decimal] = {}
+    for f in cursor.fetchall():
+        clave = (f.ID_META, tramo_de_fecha(agrupacion, f.FECHA)[0])
+        montos[clave] = montos.get(clave, 0) + f.MONTO
 
+    tramos = tramos_del_rango(agrupacion, desde, hasta)
     resultado: dict[int, list[dict]] = {}
     for id_meta in {clave[0] for clave in montos}:
         resultado[id_meta] = [
             {
-                "anio": anio,
-                "mes": mes,
-                "nombre": MESES[mes - 1],
-                "monto": numero(montos.get((id_meta, anio, mes), 0)),
+                "orden": orden,
+                "etiqueta": etiqueta,
+                "monto": numero(montos.get((id_meta, clave), 0)),
             }
-            for anio, mes in meses_del_rango(desde, hasta)
+            for orden, (clave, etiqueta) in enumerate(tramos.items(), start=1)
         ]
     return resultado
 
@@ -226,19 +257,19 @@ def base_no_disponible(_):
     return error("La base de datos no está disponible. Intenta de nuevo.", 503)
 
 
-# ---------------------------------------------------------------- endpoints
 
 def metas_del_periodo(desde: date, hasta: date):
     """Arma la respuesta de la lista. La usan las dos rutas del listado."""
     cursor = obtener_conexion().cursor()
     cursor.execute(CONSULTA_METAS + " ORDER BY a.NOMBRE", desde, hasta)
     filas = cursor.fetchall()
-    mensuales = avances_mensuales(cursor, desde, hasta)
+    agrupacion = agrupacion_del_rango(desde, hasta)
+    avance = avances(cursor, agrupacion, desde, hasta)
 
     return jsonify({
         "desde": desde.isoformat(),
         "hasta": hasta.isoformat(),
-        "metas": [fila_a_json(f, mensuales.get(f.ID_META, [])) for f in filas],
+        "metas": [fila_a_json(f, avance.get(f.ID_META, []), agrupacion) for f in filas],
     })
 
 
@@ -273,7 +304,7 @@ def listar_metas_por_periodo(periodo: str):
 @bp.get("/<int:id_meta>")
 @requiere_sesion
 def obtener_meta(id_meta: int):
-    """Una meta con su avance mensual. GET /metas/1?periodo=trimestre"""
+    """Una meta con su avance. GET /metas/1?periodo=trimestre"""
     try:
         desde, hasta = leer_parametros()
     except ValidationError as e:
@@ -285,5 +316,6 @@ def obtener_meta(id_meta: int):
     if fila is None:
         return error(f"No existe la meta {id_meta} en el periodo consultado.", 404)
 
-    mensuales = avances_mensuales(cursor, desde, hasta)
-    return jsonify(fila_a_json(fila, mensuales.get(id_meta, [])))
+    agrupacion = agrupacion_del_rango(desde, hasta)
+    avance = avances(cursor, agrupacion, desde, hasta)
+    return jsonify(fila_a_json(fila, avance.get(id_meta, []), agrupacion))

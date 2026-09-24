@@ -133,7 +133,7 @@ struct MetasView: View {
 
                     avanceDelPeriodo(meta)
                     tarjetasDeMontos(meta)
-                    avanceMensual(meta)
+                    graficaAvance(meta)
 
                     Text("\(meta.donantes.formatted()) donantes activos")
                         .font(.subheadline)
@@ -229,21 +229,22 @@ struct MetasView: View {
         .cornerRadius(15)
     }
 
-    private func avanceMensual(_ meta: MetaAvance) -> some View {
+    private func graficaAvance(_ meta: MetaAvance) -> some View {
         VStack(alignment: .leading) {
-            Text("Avance mensual")
+            Text(tituloAvance(meta.agrupacion))
                 .font(.headline)
 
-            if meta.mensual.isEmpty {
+            if meta.avance.isEmpty {
                 Text("Sin cobros registrados en el periodo.")
                     .font(.footnote)
                     .foregroundColor(.gray)
                     .frame(height: 220)
             } else {
-                Chart(meta.mensual) { item in
+                Chart(meta.avance) { item in
                     BarMark(
-                        x: .value("Mes", item.nombre),
-                        y: .value("Monto", item.monto)
+                        x: .value("Periodo", item.etiqueta),
+                        y: .value("Monto", item.monto),
+                        width: meta.avance.count == 1 ? .fixed(80) : .automatic
                     )
                     .foregroundStyle(Palette.turquesa)
                 }
@@ -253,6 +254,12 @@ struct MetasView: View {
         .padding()
         .background(Palette.superficie)
         .cornerRadius(15)
+    }
+    private func tituloAvance(_ agrupacion: String) -> String {
+        if agrupacion == "hoy" { return "Avance del día" }
+        if agrupacion == "diario" { return "Avance diario" }
+        if agrupacion == "semanal" { return "Avance semanal" }
+        return "Avance mensual"
     }
 
 

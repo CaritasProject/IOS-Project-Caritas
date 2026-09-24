@@ -18,7 +18,8 @@ struct MetaAvance: Identifiable, Codable {
     let porcentaje: Int
     let semaforo: String
     let donantes: Int
-    let mensual: [MesAvance]
+    let agrupacion: String
+    let avance: [TramoAvance]
 
     var color: Color {
         switch semaforo {
@@ -29,13 +30,12 @@ struct MetaAvance: Identifiable, Codable {
     }
 }
 
-struct MesAvance: Identifiable, Codable {
-    let anio: Int
-    let mes: Int
-    let nombre: String
+struct TramoAvance: Identifiable, Codable {
+    let orden: Int
+    let etiqueta: String
     let monto: Double
 
-    var id: String { "\(anio)-\(mes)" }
+    var id: Int { return orden }
 }
 
 struct Rebanada: Identifiable {
@@ -71,29 +71,29 @@ extension MetaAvance {
         MetaAvance(id: 1, nombre: "Banco De Alimentos", lineaEstrategica: "Telemarketing",
                    objetivo: 820000, objetivoTotal: 820000, comprometido: 742000,
                    cobrado: 664200, faltante: 155800, porcentaje: 81,
-                   semaforo: "verde", donantes: 1240,
-                   mensual: [
-                       MesAvance(anio: 2026, mes: 7, nombre: "Julio", monto: 208400),
-                       MesAvance(anio: 2026, mes: 8, nombre: "Agosto", monto: 221600),
-                       MesAvance(anio: 2026, mes: 9, nombre: "Septiembre", monto: 234200)
+                   semaforo: "verde", donantes: 1240, agrupacion: "mensual",
+                   avance: [
+                       TramoAvance(orden: 1, etiqueta: "Jul", monto: 208400),
+                       TramoAvance(orden: 2, etiqueta: "Ago", monto: 221600),
+                       TramoAvance(orden: 3, etiqueta: "Sep", monto: 234200)
                    ]),
         MetaAvance(id: 2, nombre: "Dispensarios Médicos", lineaEstrategica: "Eventos",
                    objetivo: 420000, objetivoTotal: 420000, comprometido: 338000,
                    cobrado: 273000, faltante: 147000, porcentaje: 65,
-                   semaforo: "amarillo", donantes: 612,
-                   mensual: [
-                       MesAvance(anio: 2026, mes: 7, nombre: "Julio", monto: 84300),
-                       MesAvance(anio: 2026, mes: 8, nombre: "Agosto", monto: 91200),
-                       MesAvance(anio: 2026, mes: 9, nombre: "Septiembre", monto: 97500)
+                   semaforo: "amarillo", donantes: 612, agrupacion: "mensual",
+                   avance: [
+                       TramoAvance(orden: 1, etiqueta: "Jul", monto: 84300),
+                       TramoAvance(orden: 2, etiqueta: "Ago", monto: 91200),
+                       TramoAvance(orden: 3, etiqueta: "Sep", monto: 97500)
                    ]),
         MetaAvance(id: 4, nombre: "Promoción Humana", lineaEstrategica: "Fundaciones",
                    objetivo: 310000, objetivoTotal: 310000, comprometido: 212400,
                    cobrado: 164300, faltante: 145700, porcentaje: 53,
-                   semaforo: "rojo", donantes: 498,
-                   mensual: [
-                       MesAvance(anio: 2026, mes: 7, nombre: "Julio", monto: 52800),
-                       MesAvance(anio: 2026, mes: 8, nombre: "Agosto", monto: 54100),
-                       MesAvance(anio: 2026, mes: 9, nombre: "Septiembre", monto: 57400)
+                   semaforo: "rojo", donantes: 498, agrupacion: "mensual",
+                   avance: [
+                       TramoAvance(orden: 1, etiqueta: "Jul", monto: 52800),
+                       TramoAvance(orden: 2, etiqueta: "Ago", monto: 54100),
+                       TramoAvance(orden: 3, etiqueta: "Sep", monto: 57400)
                    ])
     ]
 }
