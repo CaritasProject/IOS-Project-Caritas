@@ -1,3 +1,12 @@
+//
+//  ContentView.swift
+//  Sistema de Ingresos — Cáritas de Monterrey, A.B.P.
+//
+//  ARCHIVO COMPARTIDO: navegación principal (barra lateral con las 4 secciones).
+//  Cada integrante conecta aquí SU pantalla y no toca las de los demás.
+//  Avisa al equipo antes de modificarlo.
+//
+
 import SwiftUI
 
 struct ContentView: View {
@@ -6,10 +15,10 @@ struct ContentView: View {
     @State private var seccionSeleccionada: Int = 0
 
     var body: some View {
-        if sesion.sesionIniciada {
-            principal
-        } else {
+        if !sesion.sesionIniciada {
             LoginView()
+        } else {
+            principal
         }
     }
 

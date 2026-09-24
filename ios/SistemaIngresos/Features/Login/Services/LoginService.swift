@@ -19,6 +19,6 @@ final class LoginService {
 
     func iniciarSesion(correo: String, password: String) async throws -> RespuestaLogin {
         let credenciales = CredencialesLogin(correo: correo, password: password)
-        return try await api.post("auth/login", cuerpo: credenciales)
+        return try await api.post("auth/login", body: credenciales)
     }
 }

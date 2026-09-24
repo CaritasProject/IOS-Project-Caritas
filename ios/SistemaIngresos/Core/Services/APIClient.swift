@@ -1,7 +1,12 @@
 import Foundation
 
+/// Configura API_BASE_URL en el Scheme de Xcode o en Info.plist.
+/// El token de la sesión lo escribe SesionService en `tokenSesion`; nunca se guarda en código.
 final class APIClient {
     static let compartido = APIClient()
+
+    /// Token JWT de la sesión activa, compartido por toda la app (como UserDefaults.standard).
+    /// SesionService lo guarda al iniciar sesión y lo borra al cerrarla.
     static var tokenSesion: String?
 
     private let baseURL: String
@@ -10,16 +15,15 @@ final class APIClient {
 
     init(baseURL: String? = nil, sesion: URLSession = .shared,
          token: @escaping () -> String? = { APIClient.tokenSesion }) {
-        self.baseURL = baseURL ?? APIClient.baseURLConfigurada()
+        self.baseURL = baseURL ?? ProcessInfo.processInfo.environment["API_BASE_URL"]
+            ?? Bundle.main.object(forInfoDictionaryKey: "API_BASE_URL") as? String
+            ?? "http://localhost:5000"
         self.sesion = sesion
         self.token = token
     }
 
     enum ErrorAPI: LocalizedError {
-        case configuracion
-        case http(Int)
-        case datos
-
+        case configuracion, http(Int), datos
         var errorDescription: String? {
             switch self {
             case .configuracion: "Configura una URL válida para la API."
@@ -32,62 +36,45 @@ final class APIClient {
         }
     }
 
-    func get<T: Decodable>(_ ruta: String) async throws -> T {
-        let request = try armarPeticion(ruta: ruta)
-        return try await enviar(request)
-    }
-
-    func post<Cuerpo: Encodable, T: Decodable>(_ ruta: String, cuerpo: Cuerpo) async throws -> T {
-        var request = try armarPeticion(ruta: ruta)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONEncoder().encode(cuerpo)
-        return try await enviar(request)
-    }
-
-    private static func baseURLConfigurada() -> String {
-        if let desdeScheme = ProcessInfo.processInfo.environment["API_BASE_URL"] {
-            return desdeScheme
-        }
-        if let desdeInfoPlist = Bundle.main.object(forInfoDictionaryKey: "API_BASE_URL") as? String {
-            return desdeInfoPlist
-        }
-        return "http://localhost:5000"
-    }
-
-    private func armarPeticion(ruta: String) throws -> URLRequest {
-        guard let base = URL(string: baseURL),
-              base.scheme == "http" || base.scheme == "https",
-              base.host != nil else {
-            throw ErrorAPI.configuracion
-        }
-
-        var request = URLRequest(url: base.appending(path: ruta))
+    func get<T: Decodable>(_ path: String) async throws -> T {
+        guard let base = URL(string: baseURL), ["http", "https"].contains(base.scheme),
+              base.host != nil else { throw ErrorAPI.configuracion }
+        var request = URLRequest(url: base.appending(path: path))
         request.timeoutInterval = 20
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         if let token = token(), !token.isEmpty {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
-        return request
+        let (data, response) = try await sesion.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw ErrorAPI.datos }
+        guard 200..<300 ~= http.statusCode else { throw ErrorAPI.http(http.statusCode) }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        do {
+            return try decoder.decode(T.self, from: data)
+        } catch { throw ErrorAPI.datos }
     }
 
-    private func enviar<T: Decodable>(_ request: URLRequest) async throws -> T {
+    /// POST con cuerpo JSON. Lo usa el login (auth/login). Mismo estilo que get.
+    func post<Body: Encodable, T: Decodable>(_ path: String, body: Body) async throws -> T {
+        guard let base = URL(string: baseURL), ["http", "https"].contains(base.scheme),
+              base.host != nil else { throw ErrorAPI.configuracion }
+        var request = URLRequest(url: base.appending(path: path))
+        request.httpMethod = "POST"
+        request.timeoutInterval = 20
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        if let token = token(), !token.isEmpty {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        request.httpBody = try JSONEncoder().encode(body)
         let (data, response) = try await sesion.data(for: request)
-
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw ErrorAPI.datos
-        }
-
-        guard httpResponse.statusCode >= 200 && httpResponse.statusCode < 300 else {
-            throw ErrorAPI.http(httpResponse.statusCode)
-        }
-
-        let jsonDecoder = JSONDecoder()
-        jsonDecoder.dateDecodingStrategy = .iso8601
+        guard let http = response as? HTTPURLResponse else { throw ErrorAPI.datos }
+        guard 200..<300 ~= http.statusCode else { throw ErrorAPI.http(http.statusCode) }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
         do {
-            return try jsonDecoder.decode(T.self, from: data)
-        } catch {
-            throw ErrorAPI.datos
-        }
+            return try decoder.decode(T.self, from: data)
+        } catch { throw ErrorAPI.datos }
     }
 }

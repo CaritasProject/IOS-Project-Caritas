@@ -1,3 +1,8 @@
+"""Configuración de la API — ARCHIVO COMPARTIDO.
+
+Lee las variables del archivo .env. Avisa al equipo antes de modificarlo.
+"""
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 

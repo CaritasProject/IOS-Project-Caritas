@@ -1,4 +1,10 @@
+"""Blueprint de donantes (listado, ficha, pagos y llamadas).
+
+Dueño: Persona 3 (Donantes).
+"""
+
 from datetime import date, datetime
+from decimal import Decimal
 
 from flask import Blueprint, jsonify
 
@@ -8,7 +14,8 @@ from core.db import obtener_conexion
 
 bp = Blueprint("donantes", __name__, url_prefix="/donantes")
 
-CONSULTA_DONANTES = """
+
+BASE_QUERY = """
 SELECT
     i.ID_DONANTE,
     i.NOMBRE_DONANTE,
@@ -58,60 +65,60 @@ OUTER APPLY (
 """
 
 
-def nombres_de_columnas(cursor):
-    return [columna[0] for columna in cursor.description]
-
-
 def filas_como_diccionarios(cursor):
-    columnas = nombres_de_columnas(cursor)
-    return [dict(zip(columnas, fila)) for fila in cursor.fetchall()]
+    columns = [column[0] for column in cursor.description]
+    return [dict(zip(columns, row)) for row in cursor.fetchall()]
 
 
 def fila_como_diccionario(cursor):
-    columnas = nombres_de_columnas(cursor)
-    fila = cursor.fetchone()
-    if fila is None:
-        return None
-    return dict(zip(columnas, fila))
+    columns = [column[0] for column in cursor.description]
+    row = cursor.fetchone()
+    return dict(zip(columns, row)) if row is not None else None
 
 
-def iso8601(valor):
-    if valor is None:
+def iso8601(value):
+    if value is None:
         return "0001-01-01T00:00:00Z"
-    if isinstance(valor, datetime):
-        return valor.replace(microsecond=0).isoformat() + "Z"
-    if isinstance(valor, date):
-        return valor.isoformat() + "T00:00:00Z"
-    return str(valor)
+    if isinstance(value, datetime):
+        return value.replace(microsecond=0).isoformat() + "Z"
+    if isinstance(value, date):
+        return value.isoformat() + "T00:00:00Z"
+    return str(value)
 
 
-def numero(valor):
-    return float(valor or 0)
+def numero(value):
+    if isinstance(value, Decimal):
+        return float(value)
+    return float(value or 0)
 
 
-def segmento(donante):
-    if donante["EN_RIESGO"]:
+def segmento(row):
+    if row["EN_RIESGO"]:
         return "en_riesgo"
-    if donante["ALTO_VALOR"]:
+    if row["ALTO_VALOR"]:
         return "alto_valor"
     return "regular"
 
 
-def serializar_donante(donante, pagos=None, llamadas=None):
-    nivel_riesgo = donante["NIVEL_RIESGO"].lower()
+def detalle_estado(row):
+    nivel = row["NIVEL_RIESGO"].lower()
+    return f"Nivel de riesgo {nivel} según la última donación"
+
+
+def serializar_donante(row, pagos=None, llamadas=None):
     return {
-        "id": donante["ID_DONANTE"],
-        "nombre": donante["NOMBRE_DONANTE"],
-        "segmento": segmento(donante),
-        "estado": donante["ESTATUS_DONANTE"].lower(),
-        "nivelRiesgo": nivel_riesgo,
-        "montoTotal": numero(donante["MONTO_TOTAL"]),
-        "ultimaDonacion": iso8601(donante["ULTIMA_DONACION"]),
-        "primeraDonacion": iso8601(donante["PRIMERA_DONACION"]),
-        "frecuencia": donante["FRECUENCIA"].capitalize(),
-        "montoPromedio": numero(donante["MONTO_PROMEDIO"]),
-        "acumulado12Meses": numero(donante["ACUMULADO_12_MESES"]),
-        "detalleEstado": f"Nivel de riesgo {nivel_riesgo} según la última donación",
+        "id": row["ID_DONANTE"],
+        "nombre": row["NOMBRE_DONANTE"],
+        "segmento": segmento(row),
+        "estado": row["ESTATUS_DONANTE"].lower(),
+        "nivelRiesgo": row["NIVEL_RIESGO"].lower(),
+        "montoTotal": numero(row["MONTO_TOTAL"]),
+        "ultimaDonacion": iso8601(row["ULTIMA_DONACION"]),
+        "primeraDonacion": iso8601(row["PRIMERA_DONACION"]),
+        "frecuencia": row["FRECUENCIA"].capitalize(),
+        "montoPromedio": numero(row["MONTO_PROMEDIO"]),
+        "acumulado12Meses": numero(row["ACUMULADO_12_MESES"]),
+        "detalleEstado": detalle_estado(row),
         "pagos": pagos or [],
         "llamadas": llamadas or [],
     }
@@ -120,20 +127,22 @@ def serializar_donante(donante, pagos=None, llamadas=None):
 @bp.get("")
 @requiere_sesion
 def listar_donantes():
+    """Regresa el listado resumido de donantes."""
     cursor = obtener_conexion().cursor()
-    cursor.execute(CONSULTA_DONANTES + " ORDER BY i.NOMBRE_DONANTE")
-    donantes = filas_como_diccionarios(cursor)
+    cursor.execute(BASE_QUERY + " ORDER BY i.NOMBRE_DONANTE")
+    rows = filas_como_diccionarios(cursor)
     cursor.close()
-    return jsonify([serializar_donante(donante) for donante in donantes])
+    return jsonify([serializar_donante(row) for row in rows])
 
 
 @bp.get("/<int:donante_id>")
 @requiere_sesion
 def obtener_donante(donante_id):
+    """Regresa la ficha, pagos y llamadas de un donante."""
     cursor = obtener_conexion().cursor()
-    cursor.execute(CONSULTA_DONANTES + " WHERE i.ID_DONANTE = ?", donante_id)
-    donante = fila_como_diccionario(cursor)
-    if donante is None:
+    cursor.execute(BASE_QUERY + " WHERE i.ID_DONANTE = ?", donante_id)
+    donor = fila_como_diccionario(cursor)
+    if donor is None:
         cursor.close()
         return jsonify({"error": "Donante no encontrado"}), 404
 
@@ -152,12 +161,12 @@ def obtener_donante(donante_id):
     )
     pagos = [
         {
-            "id": pago["ID_BITACORA"],
-            "date": iso8601(pago["FECHA"]),
-            "amount": numero(pago["MONTO"]),
-            "status": pago["ESTATUS"],
+            "id": row["ID_BITACORA"],
+            "date": iso8601(row["FECHA"]),
+            "amount": numero(row["MONTO"]),
+            "status": row["ESTATUS"],
         }
-        for pago in filas_como_diccionarios(cursor)
+        for row in filas_como_diccionarios(cursor)
     ]
 
     cursor.execute(
@@ -172,13 +181,13 @@ def obtener_donante(donante_id):
     )
     llamadas = [
         {
-            "id": llamada["ID_LLAMADA"],
-            "date": iso8601(llamada["FECHA_LLAMADA"]),
-            "result": llamada["RESULTADO"],
-            "notes": llamada["COMENTARIOS"],
+            "id": row["ID_LLAMADA"],
+            "date": iso8601(row["FECHA_LLAMADA"]),
+            "result": row["RESULTADO"],
+            "notes": row["COMENTARIOS"],
         }
-        for llamada in filas_como_diccionarios(cursor)
+        for row in filas_como_diccionarios(cursor)
     ]
     cursor.close()
 
-    return jsonify(serializar_donante(donante, pagos, llamadas))
+    return jsonify(serializar_donante(donor, pagos, llamadas))
