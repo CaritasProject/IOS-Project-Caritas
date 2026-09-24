@@ -31,15 +31,28 @@ Los cinco valores coinciden con los botones del selector de la barra superior.
   "topDiez":  { "total": 312, "alCorriente": 289, "porcentajeDeLoCobrado": 61.0 },
   "telemarketing": { "llamadas": 4820, "compromisosGenerados": 612,
                      "tasaConversion": 12.7 },
-  "ingresosPorSemana": [
-    { "semana": 31, "etiqueta": "Sem 31", "comprometido": 430000.0, "cobrado": 352000.0 }
+  "ingresosPorTramo": [
+    { "orden": 1, "etiqueta": "Sem 31", "comprometido": 430000.0, "cobrado": 352000.0 }
   ]
 }
 ```
 
 Los montos son números JSON en MXN, no cadenas con símbolo de moneda. Los
-porcentajes vienen de 0 a 100 con un decimal. `ingresosPorSemana` puede venir
-vacío si el periodo no cubre ninguna semana con cobros.
+porcentajes vienen de 0 a 100 con un decimal.
+
+`ingresosPorTramo` trae una barra por tramo del periodo, en orden y con los
+tramos sin cobros en cero. `orden` empieza en 1 y es el `id` en iOS.
+
+| Periodo | Tramo | Barras | Etiqueta |
+|---|---|---|---|
+| `dia` | el día completo | 1 | `24 Sep` |
+| `semana` | día, de lunes a domingo | 7 | `Lun 21` |
+| `mes`, `trimestre` | semana ISO | 4 a 6 / 13 a 14 | `Sem 36` |
+| `ano` | mes | 12 | `Ene` |
+
+El día no se parte en horas porque `FECHA_COBRO` es `DATE`, sin hora. Si
+todos los tramos vienen en cero, la app muestra "No hay datos de ingresos para
+este periodo." en lugar de la gráfica.
 
 ## De dónde sale cada número
 
@@ -52,7 +65,7 @@ Todo se calcula en `api/routers/resumen.py` contra el esquema de `db/01_esquema.
 | Donantes en riesgo | `VW_DONANTE_INDICADORES` con `EN_RIESGO = 1`, partido por `COBROS_VENCIDOS` |
 | Top 10 % | `VW_DONANTE_INDICADORES` con `ALTO_VALOR = 1`; el porcentaje compara su `ACUMULADO_12_MESES` contra el total |
 | Telemarketing | `REGISTRO_LLAMADA` del periodo y compromisos dados de alta en él |
-| Ingresos por semana | La misma bitácora agrupada por `DATEPART(ISO_WEEK, FECHA_COBRO)` |
+| Gráfica de ingresos | La misma bitácora agrupada por `FECHA_COBRO`; `armar_tramos` la reparte en días, semanas o meses según el periodo |
 
 El semáforo de riesgo y el corte de alto valor no se recalculan aquí: viven en
 `VW_DONANTE_INDICADORES`, para que Donantes y Resumen muestren los mismos números.
