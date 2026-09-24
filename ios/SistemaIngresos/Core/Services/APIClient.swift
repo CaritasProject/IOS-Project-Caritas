@@ -1,15 +1,20 @@
 import Foundation
 
 /// Configura API_BASE_URL en el Scheme de Xcode o en Info.plist.
-/// API_TOKEN es opcional mientras se conecta la sesión; nunca se guarda en código.
+/// El token de la sesión lo escribe SesionService en `tokenSesion`; nunca se guarda en código.
 final class APIClient {
     static let compartido = APIClient()
+
+    /// Token JWT de la sesión activa, compartido por toda la app (como UserDefaults.standard).
+    /// SesionService lo guarda al iniciar sesión y lo borra al cerrarla.
+    static var tokenSesion: String?
+
     private let baseURL: String
     private let sesion: URLSession
     private let token: () -> String?
 
     init(baseURL: String? = nil, sesion: URLSession = .shared,
-         token: @escaping () -> String? = { ProcessInfo.processInfo.environment["API_TOKEN"] }) {
+         token: @escaping () -> String? = { APIClient.tokenSesion }) {
         self.baseURL = baseURL ?? ProcessInfo.processInfo.environment["API_BASE_URL"]
             ?? Bundle.main.object(forInfoDictionaryKey: "API_BASE_URL") as? String
             ?? "http://localhost:5000"
@@ -22,7 +27,7 @@ final class APIClient {
         var errorDescription: String? {
             switch self {
             case .configuracion: "Configura una URL válida para la API."
-            case .http(401): "Correo o contraseña incorrectos."
+            case .http(401): "Tu sesión expiró. Cierra la app y vuelve a iniciar sesión."
             case .http(404): "El recurso ya no está disponible."
             case .http(503): "El servicio no está configurado o no está disponible."
             case .http(let codigo): "La API respondió con un error (\(codigo))."

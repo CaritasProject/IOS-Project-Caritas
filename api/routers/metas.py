@@ -24,6 +24,7 @@ import pyodbc
 from flask import Blueprint, jsonify, request
 from pydantic import ValidationError
 
+from core.auth import requiere_sesion
 from core.db import obtener_conexion
 from models.meta import ConsultaMetas
 
@@ -242,6 +243,7 @@ def metas_del_periodo(desde: date, hasta: date):
 
 
 @bp.get("")
+@requiere_sesion
 def listar_metas():
     """Metas del periodo. GET /metas?periodo=trimestre (o ?desde=&hasta=)"""
     try:
@@ -252,6 +254,7 @@ def listar_metas():
 
 
 @bp.get("/periodo/<periodo>")
+@requiere_sesion
 def listar_metas_por_periodo(periodo: str):
     """Misma lista, con el periodo en la ruta. GET /metas/periodo/trimestre
 
@@ -268,6 +271,7 @@ def listar_metas_por_periodo(periodo: str):
 
 
 @bp.get("/<int:id_meta>")
+@requiere_sesion
 def obtener_meta(id_meta: int):
     """Una meta con su avance mensual. GET /metas/1?periodo=trimestre"""
     try:

@@ -2,6 +2,7 @@ from datetime import date, timedelta
 
 from flask import Blueprint, jsonify
 
+from core.auth import requiere_sesion
 from core.db import obtener_conexion
 
 bp = Blueprint("resumen", __name__, url_prefix="/resumen")
@@ -204,11 +205,13 @@ def consultar_ingresos_por_semana(cursor, desde, hasta):
 
 
 @bp.get("/kpis")
+@requiere_sesion
 def obtener_kpis_del_mes():
     return obtener_kpis("mes")
 
 
 @bp.get("/kpis/<periodo>")
+@requiere_sesion
 def obtener_kpis(periodo):
     periodo = periodo.lower()
     if periodo not in PERIODOS:

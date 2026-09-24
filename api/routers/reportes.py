@@ -8,6 +8,7 @@ from flask import Blueprint, Response, jsonify, request
 from pydantic import ValidationError
 
 from core.archivos import archivo_excel, archivo_pdf, titulo_columna, valor_legible
+from core.auth import requiere_sesion
 from core.db import obtener_conexion
 from models.reporte import ConfiguracionReporte
 from routers.metas import CONSULTA_METAS, objetivo_prorrateado
@@ -171,6 +172,7 @@ def base_no_disponible(_):
 
 
 @bp.get("")
+@requiere_sesion
 def listar_reportes():
     cursor = obtener_conexion().cursor()
     cursor.execute(CONSULTA_REPORTES + " ORDER BY h.FECHA_GENERACION DESC")
@@ -178,6 +180,7 @@ def listar_reportes():
 
 
 @bp.get("/<int:id_reporte>")
+@requiere_sesion
 def obtener_reporte(id_reporte: int):
     cursor = obtener_conexion().cursor()
     cursor.execute(CONSULTA_REPORTES + " WHERE h.ID_REPORTE = ?", id_reporte)
@@ -188,6 +191,7 @@ def obtener_reporte(id_reporte: int):
 
 
 @bp.post("")
+@requiere_sesion
 def generar_reporte():
     datos = request.get_json(silent=True)
     if datos is None:
