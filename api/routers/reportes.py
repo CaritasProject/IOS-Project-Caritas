@@ -11,13 +11,16 @@ from core.archivos import archivo_excel, archivo_pdf, titulo_columna, valor_legi
 from core.auth import requiere_sesion
 from core.db import obtener_conexion
 from models.reporte import ConfiguracionReporte
-from routers.metas import CONSULTA_METAS, objetivo_prorrateado
+from routers.metas import CONSULTA_METAS, objetivo_prorrateado, porcentaje_de_avance
 
 bp = Blueprint("reportes", __name__, url_prefix="/reportes")
 
 TIPO_PARA_APP = {"INGRESOS": "Ingresos", "COBRANZA": "Cobranza",
                  "TELEMARKETING": "Telemarketing", "METAS": "Metas"}
 FORMATO_PARA_APP = {"PDF": "PDF", "EXCEL": "Excel", "CSV": "CSV"}
+EXTENSIONES = {"PDF": "pdf", "EXCEL": "xlsx", "CSV": "csv"}
+TIPOS_MIME = {"pdf": "application/pdf",
+              "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}
 
 NOMBRE_BASE = {"INGRESOS": "Ingresos", "COBRANZA": "Cobranza",
                "TELEMARKETING": "Telemarketing", "METAS": "Avance de metas"}
@@ -97,6 +100,10 @@ def error(mensaje: str, codigo: int):
     return jsonify({"error": mensaje}), codigo
 
 
+def es_semanal(desde: date, hasta: date) -> bool:
+    return (hasta - desde).days + 1 <= 7
+
+
 def es_mes_completo(desde: date, hasta: date) -> bool:
     ultimo_dia = calendar.monthrange(desde.year, desde.month)[1]
     return desde.day == 1 and hasta == date(desde.year, desde.month, ultimo_dia)
@@ -111,8 +118,7 @@ def es_trimestre_completo(desde: date, hasta: date) -> bool:
 
 
 def nombre_del_reporte(tipo: str, desde: date, hasta: date) -> str:
-    dias = (hasta - desde).days + 1
-    if dias <= 7:
+    if es_semanal(desde, hasta):
         return f"{NOMBRE_SEMANAL[tipo]} · sem {desde.isocalendar().week}"
     if es_mes_completo(desde, hasta):
         return f"{NOMBRE_MENSUAL[tipo]} · {MESES_LARGOS[desde.month - 1]}"
@@ -137,7 +143,7 @@ def fila_a_json(fila) -> dict:
         "fecha": f"{generado.day:02d} {MESES_CORTOS[generado.month - 1]} {generado.year}",
         "formato": FORMATO_PARA_APP[fila.FORMATO],
         "detalle": rango_corto(desde, hasta),
-        "periodicidad": "Semanal" if (hasta - desde).days + 1 <= 7 else "Mensual",
+        "periodicidad": "Semanal" if es_semanal(desde, hasta) else "Mensual",
         "tipo": TIPO_PARA_APP[tipo],
         "comprometido": float(fila.COMPROMETIDO),
         "cobrado": float(fila.COBRADO),
@@ -151,13 +157,13 @@ def buscar_en_catalogo(cursor, tabla: str, columna_id: str, nombre: str, etiquet
     fila = cursor.fetchone()
     if fila is None:
         cursor.execute(f"SELECT NOMBRE FROM dbo.{tabla} ORDER BY NOMBRE")
-        opciones = ", ".join(["Todas"] + [f.NOMBRE for f in cursor.fetchall()])
+        opciones = ", ".join(["Todas"] + [opcion.NOMBRE for opcion in cursor.fetchall()])
         raise LookupError(f"{etiqueta} '{nombre}' no existe. Opciones: {opciones}")
     return fila[0]
 
 
 def mensaje_de_validacion(detalle: dict) -> str:
-    campo = ".".join(str(p) for p in detalle["loc"])
+    campo = ".".join(str(parte) for parte in detalle["loc"])
     if detalle["type"] == "missing":
         return f"Falta el campo '{campo}'."
     if detalle["type"].startswith("date"):
@@ -176,7 +182,7 @@ def base_no_disponible(_):
 def listar_reportes():
     cursor = obtener_conexion().cursor()
     cursor.execute(CONSULTA_REPORTES + " ORDER BY h.FECHA_GENERACION DESC")
-    return jsonify([fila_a_json(f) for f in cursor.fetchall()])
+    return jsonify([fila_a_json(fila) for fila in cursor.fetchall()])
 
 
 @bp.get("/<int:id_reporte>")
@@ -198,8 +204,8 @@ def generar_reporte():
         return error("El cuerpo debe ser JSON.", 400)
     try:
         config = ConfiguracionReporte.model_validate(datos)
-    except ValidationError as e:
-        return error(mensaje_de_validacion(e.errors()[0]), 400)
+    except ValidationError as excepcion:
+        return error(mensaje_de_validacion(excepcion.errors()[0]), 400)
 
     conexion = obtener_conexion()
     cursor = conexion.cursor()
@@ -212,8 +218,8 @@ def generar_reporte():
                                       config.lineaEstrategica, "La línea estratégica")
         id_campana = buscar_en_catalogo(cursor, "CAT_CAMPANA_FINANCIERA", "ID_CAMPANA_FINANCIERA",
                                         config.campania, "La campaña")
-    except LookupError as e:
-        return error(str(e), 400)
+    except LookupError as excepcion:
+        return error(str(excepcion), 400)
 
     cursor.execute(
         """INSERT INTO dbo.HISTORIAL_REPORTE (ID_TIPO_REPORTE, ID_FORMATO, FECHA_DESDE, FECHA_HASTA)
@@ -242,42 +248,57 @@ def texto_monto(valor) -> str:
     return f"{valor or 0:.2f}"
 
 
+def esta_vencido(cobro, hoy: date) -> bool:
+    if cobro.ESTATUS == "RECHAZADO":
+        return True
+    return cobro.ESTATUS == "PENDIENTE" and cobro.FECHA_VENCIMIENTO < hoy
+
+
+def dias_de_atraso(cobro, hoy: date) -> int:
+    if not esta_vencido(cobro, hoy):
+        return 0
+    return max((hoy - cobro.FECHA_VENCIMIENTO).days, 0)
+
+
 def filas_de_cobros(cursor, id_reporte: int, es_cobranza: bool):
     cursor.execute(CONSULTA_COBROS, id_reporte)
     hoy = date.today()
     filas = []
-    for c in cursor.fetchall():
-        fila = [c.ID_BITACORA, texto_fecha(c.FECHA_COBRO), texto_fecha(c.FECHA_VENCIMIENTO),
-                texto_fecha(c.FECHA_PAGO), c.DONANTE, c.LINEA, c.ASIGNACION, c.CAMPANA or "",
-                c.FORMA_PAGO, texto_monto(c.IMPORTE), texto_monto(c.IMPORTE_COBRADO), c.ESTATUS]
+    for cobro in cursor.fetchall():
+        fila = [cobro.ID_BITACORA, texto_fecha(cobro.FECHA_COBRO), texto_fecha(cobro.FECHA_VENCIMIENTO),
+                texto_fecha(cobro.FECHA_PAGO), cobro.DONANTE, cobro.LINEA, cobro.ASIGNACION,
+                cobro.CAMPANA or "", cobro.FORMA_PAGO, texto_monto(cobro.IMPORTE),
+                texto_monto(cobro.IMPORTE_COBRADO), cobro.ESTATUS]
         if es_cobranza:
-            vencido = c.ESTATUS == "RECHAZADO" or (c.ESTATUS == "PENDIENTE" and c.FECHA_VENCIMIENTO < hoy)
-            dias_atraso = max((hoy - c.FECHA_VENCIMIENTO).days, 0) if vencido else 0
-            fila += ["SÍ" if vencido else "NO", dias_atraso]
+            fila += ["SÍ" if esta_vencido(cobro, hoy) else "NO", dias_de_atraso(cobro, hoy)]
         filas.append(fila)
-    if es_cobranza:
-        filas.sort(key=lambda f: -f[-1])
-        return COLUMNAS_COBROS + ["vencido", "dias_atraso"], filas
-    return COLUMNAS_COBROS, filas
+
+    if not es_cobranza:
+        return COLUMNAS_COBROS, filas
+
+    columna_atraso = -1
+    filas.sort(key=lambda fila: fila[columna_atraso], reverse=True)
+    return COLUMNAS_COBROS + ["vencido", "dias_atraso"], filas
 
 
 def filas_de_llamadas(cursor, id_reporte: int):
     cursor.execute(CONSULTA_LLAMADAS, id_reporte)
-    filas = [[l.ID_LLAMADA, l.FECHA_LLAMADA.strftime("%Y-%m-%d %H:%M"), l.DONANTE,
-              l.TELEFONISTA, l.RESULTADO, l.COMENTARIOS or ""] for l in cursor.fetchall()]
+    filas = [[llamada.ID_LLAMADA, llamada.FECHA_LLAMADA.strftime("%Y-%m-%d %H:%M"), llamada.DONANTE,
+              llamada.TELEFONISTA, llamada.RESULTADO, llamada.COMENTARIOS or ""]
+             for llamada in cursor.fetchall()]
     return COLUMNAS_LLAMADAS, filas
 
 
 def filas_de_metas(cursor, desde: date, hasta: date):
     cursor.execute(CONSULTA_METAS + " ORDER BY a.NOMBRE", desde, hasta)
     filas = []
-    for m in cursor.fetchall():
-        objetivo = objetivo_prorrateado(m)
-        cobrado = m.COBRADO or 0
-        porcentaje = int((cobrado / objetivo * 100).to_integral_value()) if objetivo else 0
-        filas.append([m.ID_META, m.ASIGNACION, texto_fecha(m.INICIO), texto_fecha(m.FIN),
-                      texto_monto(m.MONTO_META), texto_monto(objetivo), texto_monto(m.COMPROMETIDO),
-                      texto_monto(cobrado), texto_monto(max(objetivo - cobrado, 0)), porcentaje])
+    for meta in cursor.fetchall():
+        objetivo = objetivo_prorrateado(meta)
+        cobrado = meta.COBRADO or 0
+        filas.append([meta.ID_META, meta.ASIGNACION, texto_fecha(meta.INICIO), texto_fecha(meta.FIN),
+                      texto_monto(meta.MONTO_META), texto_monto(objetivo), texto_monto(meta.COMPROMETIDO),
+                      texto_monto(cobrado), texto_monto(max(objetivo - cobrado, 0)),
+                      porcentaje_de_avance(cobrado, objetivo)])
     return COLUMNAS_METAS, filas
 
 
@@ -290,16 +311,11 @@ def respuesta_csv(nombre_archivo: str, columnas: list, filas: list) -> Response:
                     headers={"Content-Disposition": f'attachment; filename="{nombre_archivo}"'})
 
 
-EXTENSIONES = {"PDF": "pdf", "EXCEL": "xlsx", "CSV": "csv"}
-TIPOS_MIME = {"pdf": "application/pdf",
-              "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}
-
-
-def alcance(cursor, id_reporte: int, tabla: str, catalogo: str, columna_id: str) -> str:
+def nombres_del_alcance(cursor, id_reporte: int, tabla: str, catalogo: str, columna_id: str) -> str:
     cursor.execute(f"""SELECT c.NOMBRE FROM dbo.{tabla} a
                        JOIN dbo.{catalogo} c ON c.{columna_id} = a.{columna_id}
                        WHERE a.ID_REPORTE = ? ORDER BY c.NOMBRE""", id_reporte)
-    nombres = [f.NOMBRE for f in cursor.fetchall()]
+    nombres = [fila.NOMBRE for fila in cursor.fetchall()]
     return ", ".join(nombres) if nombres else "Todas"
 
 
@@ -323,10 +339,10 @@ def detalles_del_reporte(cursor, reporte) -> list:
     return [
         ("Tipo", TIPO_PARA_APP[reporte.TIPO_REPORTE]),
         ("Periodo", f"{reporte.FECHA_DESDE.isoformat()} a {reporte.FECHA_HASTA.isoformat()}"),
-        ("Línea estratégica", alcance(cursor, reporte.ID_REPORTE, "REPORTE_LINEA_ESTRATEGICA",
-                                      "CAT_LINEA_ESTRATEGICA", "ID_LINEA_ESTRATEGICA")),
-        ("Campaña", alcance(cursor, reporte.ID_REPORTE, "REPORTE_CAMPANA_FINANCIERA",
-                            "CAT_CAMPANA_FINANCIERA", "ID_CAMPANA_FINANCIERA")),
+        ("Línea estratégica", nombres_del_alcance(cursor, reporte.ID_REPORTE, "REPORTE_LINEA_ESTRATEGICA",
+                                                "CAT_LINEA_ESTRATEGICA", "ID_LINEA_ESTRATEGICA")),
+        ("Campaña", nombres_del_alcance(cursor, reporte.ID_REPORTE, "REPORTE_CAMPANA_FINANCIERA",
+                                      "CAT_CAMPANA_FINANCIERA", "ID_CAMPANA_FINANCIERA")),
         ("Comprometido", f"${reporte.COMPROMETIDO:,.2f}"),
         ("Cobrado", f"${reporte.COBRADO:,.2f}"),
         ("Datos al", datetime.now().strftime("%Y-%m-%d %H:%M")),
@@ -336,6 +352,11 @@ def detalles_del_reporte(cursor, reporte) -> list:
 def nombre_de_archivo(reporte, extension: str) -> str:
     return (f"reporte-{reporte.ID_REPORTE}_{reporte.TIPO_REPORTE.lower()}_"
             f"{reporte.FECHA_DESDE.isoformat()}_{reporte.FECHA_HASTA.isoformat()}.{extension}")
+
+
+def celdas_legibles(columnas: list, fila: list) -> list:
+    return [{"id": indice, "valor": valor_legible(columna, valor)}
+            for indice, (columna, valor) in enumerate(zip(columnas, fila))]
 
 
 @bp.get("/<int:id_reporte>/csv")
@@ -385,10 +406,9 @@ def datos_para_vista_previa(id_reporte: int):
 
     _, columnas, filas = contenido
     return jsonify({
-        "columnas": [{"id": i, "nombre": titulo_columna(c)} for i, c in enumerate(columnas)],
-        "filas": [{"id": i,
-                   "celdas": [{"id": j, "valor": valor_legible(c, v)}
-                              for j, (c, v) in enumerate(zip(columnas, fila))]}
-                  for i, fila in enumerate(filas)],
+        "columnas": [{"id": indice, "nombre": titulo_columna(columna)}
+                     for indice, columna in enumerate(columnas)],
+        "filas": [{"id": indice, "celdas": celdas_legibles(columnas, fila)}
+                  for indice, fila in enumerate(filas)],
         "datosAl": datetime.now().strftime("%d/%m/%Y %H:%M"),
     })
