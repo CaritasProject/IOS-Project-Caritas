@@ -1,52 +1,28 @@
-from datetime import date, timedelta
+from datetime import date
 
+import pyodbc
 from flask import Blueprint, jsonify
 
 from core.auth import requiere_sesion
 from core.db import obtener_conexion
+from routers.metas import MESES, ventana_del_periodo
 
 bp = Blueprint("resumen", __name__, url_prefix="/resumen")
 
 PERIODOS = ["dia", "semana", "mes", "trimestre", "ano"]
 
-MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-         "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
 
-
-def rango_del_periodo(periodo, hoy):
+def etiqueta_del_periodo(periodo: str, desde: date) -> str:
+    mes = MESES[desde.month - 1]
     if periodo == "dia":
-        etiqueta = f"{hoy.day} de {MESES[hoy.month - 1]} {hoy.year}"
-        return hoy, hoy, etiqueta
-
+        return f"{desde.day} de {mes} {desde.year}"
     if periodo == "semana":
-        desde = hoy - timedelta(days=hoy.weekday())
-        hasta = desde + timedelta(days=6)
-        etiqueta = f"Semana del {desde.day} de {MESES[desde.month - 1]}"
-        return desde, hasta, etiqueta
-
+        return f"Semana del {desde.day} de {mes}"
     if periodo == "trimestre":
-        numero_trimestre = (hoy.month - 1) // 3
-        mes_inicio = numero_trimestre * 3 + 1
-        desde = date(hoy.year, mes_inicio, 1)
-        if mes_inicio + 3 > 12:
-            hasta = date(hoy.year, 12, 31)
-        else:
-            hasta = date(hoy.year, mes_inicio + 3, 1) - timedelta(days=1)
-        etiqueta = f"Trimestre {numero_trimestre + 1} de {hoy.year}"
-        return desde, hasta, etiqueta
-
+        return f"Trimestre {(desde.month - 1) // 3 + 1} de {desde.year}"
     if periodo == "ano":
-        desde = date(hoy.year, 1, 1)
-        hasta = date(hoy.year, 12, 31)
-        return desde, hasta, f"{hoy.year}"
-
-    desde = date(hoy.year, hoy.month, 1)
-    if hoy.month == 12:
-        hasta = date(hoy.year, 12, 31)
-    else:
-        hasta = date(hoy.year, hoy.month + 1, 1) - timedelta(days=1)
-    etiqueta = f"{MESES[hoy.month - 1]} {hoy.year}"
-    return desde, hasta, etiqueta
+        return f"{desde.year}"
+    return f"{mes} {desde.year}"
 
 
 def numero(valor):
@@ -79,13 +55,13 @@ def consultar_ingresos(cursor, desde, hasta):
     comprometido = numero(fila.COMPROMETIDO)
     cobrado = numero(fila.COBRADO)
 
-    ingresos = {}
-    ingresos["comprometido"] = comprometido
-    ingresos["compromisos"] = fila.COMPROMISOS or 0
-    ingresos["cobrado"] = cobrado
-    ingresos["cobrosAplicados"] = fila.COBROS_APLICADOS or 0
-    ingresos["porcentajeCobranza"] = porcentaje(cobrado, comprometido)
-    return ingresos
+    return {
+        "comprometido": comprometido,
+        "compromisos": fila.COMPROMISOS or 0,
+        "cobrado": cobrado,
+        "cobrosAplicados": fila.COBROS_APLICADOS or 0,
+        "porcentajeCobranza": porcentaje(cobrado, comprometido),
+    }
 
 
 def consultar_meta(cursor, desde, hasta, cobrado):
@@ -97,14 +73,12 @@ def consultar_meta(cursor, desde, hasta, cobrado):
         """,
         hasta, desde,
     )
-    fila = cursor.fetchone()
-    monto_meta = numero(fila.MONTO_META)
-
-    meta = {}
-    meta["montoMeta"] = monto_meta
-    meta["cobrado"] = cobrado
-    meta["porcentaje"] = porcentaje(cobrado, monto_meta)
-    return meta
+    monto_meta = numero(cursor.fetchone().MONTO_META)
+    return {
+        "montoMeta": monto_meta,
+        "cobrado": cobrado,
+        "porcentaje": porcentaje(cobrado, monto_meta),
+    }
 
 
 def consultar_riesgo(cursor):
@@ -119,12 +93,11 @@ def consultar_riesgo(cursor):
         """
     )
     fila = cursor.fetchone()
-
-    riesgo = {}
-    riesgo["total"] = fila.TOTAL or 0
-    riesgo["criticos"] = fila.CRITICOS or 0
-    riesgo["moderados"] = fila.MODERADOS or 0
-    return riesgo
+    return {
+        "total": fila.TOTAL or 0,
+        "criticos": fila.CRITICOS or 0,
+        "moderados": fila.MODERADOS or 0,
+    }
 
 
 def consultar_top_diez(cursor):
@@ -139,12 +112,11 @@ def consultar_top_diez(cursor):
         """
     )
     fila = cursor.fetchone()
-
-    top = {}
-    top["total"] = fila.TOTAL or 0
-    top["alCorriente"] = fila.AL_CORRIENTE or 0
-    top["porcentajeDeLoCobrado"] = porcentaje(fila.APORTADO, fila.TOTAL_12_MESES)
-    return top
+    return {
+        "total": fila.TOTAL or 0,
+        "alCorriente": fila.AL_CORRIENTE or 0,
+        "porcentajeDeLoCobrado": porcentaje(fila.APORTADO, fila.TOTAL_12_MESES),
+    }
 
 
 def consultar_telemarketing(cursor, desde, hasta):
@@ -156,8 +128,7 @@ def consultar_telemarketing(cursor, desde, hasta):
         """,
         desde, hasta,
     )
-    fila = cursor.fetchone()
-    llamadas = fila.LLAMADAS or 0
+    llamadas = cursor.fetchone().LLAMADAS or 0
 
     cursor.execute(
         """
@@ -167,14 +138,12 @@ def consultar_telemarketing(cursor, desde, hasta):
         """,
         desde, hasta,
     )
-    fila = cursor.fetchone()
-    compromisos = fila.COMPROMISOS or 0
-
-    telemarketing = {}
-    telemarketing["llamadas"] = llamadas
-    telemarketing["compromisosGenerados"] = compromisos
-    telemarketing["tasaConversion"] = porcentaje(compromisos, llamadas)
-    return telemarketing
+    compromisos = cursor.fetchone().COMPROMISOS or 0
+    return {
+        "llamadas": llamadas,
+        "compromisosGenerados": compromisos,
+        "tasaConversion": porcentaje(compromisos, llamadas),
+    }
 
 
 def consultar_ingresos_por_semana(cursor, desde, hasta):
@@ -193,15 +162,20 @@ def consultar_ingresos_por_semana(cursor, desde, hasta):
         desde, hasta,
     )
 
-    semanas = []
-    for fila in cursor.fetchall():
-        semana = {}
-        semana["semana"] = fila.SEMANA
-        semana["etiqueta"] = f"Sem {fila.SEMANA}"
-        semana["comprometido"] = numero(fila.COMPROMETIDO)
-        semana["cobrado"] = numero(fila.COBRADO)
-        semanas.append(semana)
-    return semanas
+    return [
+        {
+            "semana": fila.SEMANA,
+            "etiqueta": f"Sem {fila.SEMANA}",
+            "comprometido": numero(fila.COMPROMETIDO),
+            "cobrado": numero(fila.COBRADO),
+        }
+        for fila in cursor.fetchall()
+    ]
+
+
+@bp.errorhandler(pyodbc.Error)
+def base_no_disponible(_):
+    return jsonify({"error": "La base de datos no está disponible. Intenta de nuevo."}), 503
 
 
 @bp.get("/kpis")
@@ -218,29 +192,21 @@ def obtener_kpis(periodo):
         opciones = ", ".join(PERIODOS)
         return jsonify({"error": f"Periodo no válido. Usa uno de: {opciones}."}), 400
 
-    desde, hasta, etiqueta = rango_del_periodo(periodo, date.today())
-
-    try:
-        conexion = obtener_conexion()
-    except NotImplementedError:
-        return jsonify({"error": "La conexión a SQL Server todavía no está implementada en core/db.py."}), 503
-
-    cursor = conexion.cursor()
+    desde, hasta = ventana_del_periodo(periodo, date.today())
+    cursor = obtener_conexion().cursor()
     ingresos = consultar_ingresos(cursor, desde, hasta)
 
-    datos_periodo = {}
-    datos_periodo["clave"] = periodo
-    datos_periodo["etiqueta"] = etiqueta
-    datos_periodo["desde"] = desde.isoformat()
-    datos_periodo["hasta"] = hasta.isoformat()
-
-    respuesta = {}
-    respuesta["periodo"] = datos_periodo
-    respuesta["ingresos"] = ingresos
-    respuesta["meta"] = consultar_meta(cursor, desde, hasta, ingresos["cobrado"])
-    respuesta["donantesEnRiesgo"] = consultar_riesgo(cursor)
-    respuesta["topDiez"] = consultar_top_diez(cursor)
-    respuesta["telemarketing"] = consultar_telemarketing(cursor, desde, hasta)
-    respuesta["ingresosPorSemana"] = consultar_ingresos_por_semana(cursor, desde, hasta)
-
-    return jsonify(respuesta)
+    return jsonify({
+        "periodo": {
+            "clave": periodo,
+            "etiqueta": etiqueta_del_periodo(periodo, desde),
+            "desde": desde.isoformat(),
+            "hasta": hasta.isoformat(),
+        },
+        "ingresos": ingresos,
+        "meta": consultar_meta(cursor, desde, hasta, ingresos["cobrado"]),
+        "donantesEnRiesgo": consultar_riesgo(cursor),
+        "topDiez": consultar_top_diez(cursor),
+        "telemarketing": consultar_telemarketing(cursor, desde, hasta),
+        "ingresosPorSemana": consultar_ingresos_por_semana(cursor, desde, hasta),
+    })

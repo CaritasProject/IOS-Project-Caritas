@@ -26,6 +26,7 @@ enum Palette {
     static let texto           = Color(red: 0.15, green: 0.15, blue: 0.17)
     static let textoSecundario = Color(red: 0.45, green: 0.45, blue: 0.50)
     static let separador       = Color(red: 0.87, green: 0.87, blue: 0.90)
+    static let campoTexto      = Color(red: 118/255, green: 118/255, blue: 128/255, opacity: 0.12)
 
     // TODO: agregar los tonos secundarios cuando los defina el equipo de diseño.
 }
