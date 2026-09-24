@@ -12,6 +12,11 @@ PERIODOS = ["dia", "semana", "mes", "trimestre", "ano"]
 MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
          "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
 
+MESES_CORTOS = ["Ene", "Feb", "Mar", "Abr", "May", "Jun",
+                "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
+
+DIAS_CORTOS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
+
 
 def rango_del_periodo(periodo, hoy):
     if periodo == "dia":
@@ -177,31 +182,65 @@ def consultar_telemarketing(cursor, desde, hasta):
     return telemarketing
 
 
-def consultar_ingresos_por_semana(cursor, desde, hasta):
+def tramo_de_fecha(periodo, fecha):
+    """Devuelve (clave, etiqueta) de la barra de la gráfica donde cae la fecha.
+
+    FECHA_COBRO es DATE, sin hora, así que el día no se puede partir en horas:
+    el periodo "dia" es una sola barra.
+    """
+    if periodo == "dia":
+        return fecha, f"{fecha.day} {MESES_CORTOS[fecha.month - 1]}"
+
+    if periodo == "semana":
+        return fecha, f"{DIAS_CORTOS[fecha.weekday()]} {fecha.day}"
+
+    if periodo == "ano":
+        return fecha.month, MESES_CORTOS[fecha.month - 1]
+
+    # Mes y trimestre van por semana. La clave es el lunes de esa semana y no el
+    # número ISO, porque del 29 al 31 de diciembre pueden ser la "Sem 1" del año siguiente.
+    lunes = fecha - timedelta(days=fecha.weekday())
+    return lunes, f"Sem {fecha.isocalendar()[1]}"
+
+
+def armar_tramos(periodo, desde, hasta, filas):
+    """Una barra por tramo del periodo, en orden, incluidas las que no tuvieron cobros."""
+    tramos = {}
+    fecha = desde
+    while fecha <= hasta:
+        clave, etiqueta = tramo_de_fecha(periodo, fecha)
+        if clave not in tramos:
+            tramo = {}
+            tramo["orden"] = len(tramos) + 1
+            tramo["etiqueta"] = etiqueta
+            tramo["comprometido"] = 0.0
+            tramo["cobrado"] = 0.0
+            tramos[clave] = tramo
+        fecha = fecha + timedelta(days=1)
+
+    for fila in filas:
+        clave, etiqueta = tramo_de_fecha(periodo, fila.FECHA)
+        tramos[clave]["comprometido"] += numero(fila.COMPROMETIDO)
+        tramos[clave]["cobrado"] += numero(fila.COBRADO)
+
+    return list(tramos.values())
+
+
+def consultar_ingresos_por_tramo(cursor, periodo, desde, hasta):
     cursor.execute(
         """
         SELECT
-            DATEPART(ISO_WEEK, b.FECHA_COBRO)                                          AS SEMANA,
+            b.FECHA_COBRO                                                              AS FECHA,
             ISNULL(SUM(b.IMPORTE), 0)                                                  AS COMPROMETIDO,
             ISNULL(SUM(CASE WHEN ep.NOMBRE = N'COBRADO' THEN b.IMPORTE_COBRADO END), 0) AS COBRADO
         FROM dbo.OPE_BITACORA_PAGOS_DONATIVOS b
         JOIN dbo.CAT_ESTATUS_PAGO ep ON ep.ID_ESTATUS_PAGO = b.ESTATUS_PAGO
         WHERE b.FECHA_COBRO BETWEEN ? AND ?
-        GROUP BY DATEPART(ISO_WEEK, b.FECHA_COBRO)
-        ORDER BY SEMANA
+        GROUP BY b.FECHA_COBRO
         """,
         desde, hasta,
     )
-
-    semanas = []
-    for fila in cursor.fetchall():
-        semana = {}
-        semana["semana"] = fila.SEMANA
-        semana["etiqueta"] = f"Sem {fila.SEMANA}"
-        semana["comprometido"] = numero(fila.COMPROMETIDO)
-        semana["cobrado"] = numero(fila.COBRADO)
-        semanas.append(semana)
-    return semanas
+    return armar_tramos(periodo, desde, hasta, cursor.fetchall())
 
 
 @bp.get("/kpis")
@@ -241,6 +280,6 @@ def obtener_kpis(periodo):
     respuesta["donantesEnRiesgo"] = consultar_riesgo(cursor)
     respuesta["topDiez"] = consultar_top_diez(cursor)
     respuesta["telemarketing"] = consultar_telemarketing(cursor, desde, hasta)
-    respuesta["ingresosPorSemana"] = consultar_ingresos_por_semana(cursor, desde, hasta)
+    respuesta["ingresosPorTramo"] = consultar_ingresos_por_tramo(cursor, periodo, desde, hasta)
 
     return jsonify(respuesta)

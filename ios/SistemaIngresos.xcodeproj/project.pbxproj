@@ -27,10 +27,9 @@
 		914AA8D330642E71006526CE /* TarjetaPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 914AA8D030642E71006526CE /* TarjetaPanel.swift */; };
 		914AA8D430642E71006526CE /* TarjetaIndicador.swift in Sources */ = {isa = PBXBuildFile; fileRef = 914AA8CD30642E71006526CE /* TarjetaIndicador.swift */; };
 		914AA8D530642E71006526CE /* TarjetaIngresos.swift in Sources */ = {isa = PBXBuildFile; fileRef = 914AA8CE30642E71006526CE /* TarjetaIngresos.swift */; };
-		914AA8D630642E71006526CE /* GraficaIngresosSemana.swift in Sources */ = {isa = PBXBuildFile; fileRef = 914AA8C930642E71006526CE /* GraficaIngresosSemana.swift */; };
+		914AA8D630642E71006526CE /* GraficaIngresos.swift in Sources */ = {isa = PBXBuildFile; fileRef = 914AA8C930642E71006526CE /* GraficaIngresos.swift */; };
 		914AA8D730642E71006526CE /* ColumnaMonto.swift in Sources */ = {isa = PBXBuildFile; fileRef = 914AA8C830642E71006526CE /* ColumnaMonto.swift */; };
 		914AA8D830642E71006526CE /* RenglonBarraLateral.swift in Sources */ = {isa = PBXBuildFile; fileRef = 914AA8CA30642E71006526CE /* RenglonBarraLateral.swift */; };
-		914AA8D930642E71006526CE /* SemanaIngreso.swift in Sources */ = {isa = PBXBuildFile; fileRef = 914AA8CC30642E71006526CE /* SemanaIngreso.swift */; };
 		914AA8DA30642E71006526CE /* TarjetaMetas.swift in Sources */ = {isa = PBXBuildFile; fileRef = 914AA8CF30642E71006526CE /* TarjetaMetas.swift */; };
 		914AA8DB30642E71006526CE /* BarraSuperior.swift in Sources */ = {isa = PBXBuildFile; fileRef = 914AA8C730642E71006526CE /* BarraSuperior.swift */; };
 		914AA8DD30642E71006526CE /* BarraLateral.swift in Sources */ = {isa = PBXBuildFile; fileRef = 914AA8C630642E71006526CE /* BarraLateral.swift */; };
@@ -80,9 +79,8 @@
 		914AA8C630642E71006526CE /* BarraLateral.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarraLateral.swift; sourceTree = "<group>"; };
 		914AA8C730642E71006526CE /* BarraSuperior.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarraSuperior.swift; sourceTree = "<group>"; };
 		914AA8C830642E71006526CE /* ColumnaMonto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColumnaMonto.swift; sourceTree = "<group>"; };
-		914AA8C930642E71006526CE /* GraficaIngresosSemana.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraficaIngresosSemana.swift; sourceTree = "<group>"; };
+		914AA8C930642E71006526CE /* GraficaIngresos.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraficaIngresos.swift; sourceTree = "<group>"; };
 		914AA8CA30642E71006526CE /* RenglonBarraLateral.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenglonBarraLateral.swift; sourceTree = "<group>"; };
-		914AA8CC30642E71006526CE /* SemanaIngreso.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SemanaIngreso.swift; sourceTree = "<group>"; };
 		914AA8CD30642E71006526CE /* TarjetaIndicador.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TarjetaIndicador.swift; sourceTree = "<group>"; };
 		914AA8CE30642E71006526CE /* TarjetaIngresos.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TarjetaIngresos.swift; sourceTree = "<group>"; };
 		914AA8CF30642E71006526CE /* TarjetaMetas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TarjetaMetas.swift; sourceTree = "<group>"; };
@@ -229,8 +227,7 @@
 			children = (
 				914AA8C530642E71006526CE /* .gitkeep */,
 				914AA8C830642E71006526CE /* ColumnaMonto.swift */,
-				914AA8C930642E71006526CE /* GraficaIngresosSemana.swift */,
-				914AA8CC30642E71006526CE /* SemanaIngreso.swift */,
+				914AA8C930642E71006526CE /* GraficaIngresos.swift */,
 				914AA8CD30642E71006526CE /* TarjetaIndicador.swift */,
 				914AA8CE30642E71006526CE /* TarjetaIngresos.swift */,
 				914AA8CF30642E71006526CE /* TarjetaMetas.swift */,
@@ -489,10 +486,9 @@
 				914AA8D330642E71006526CE /* TarjetaPanel.swift in Sources */,
 				914AA8D430642E71006526CE /* TarjetaIndicador.swift in Sources */,
 				914AA8D530642E71006526CE /* TarjetaIngresos.swift in Sources */,
-				914AA8D630642E71006526CE /* GraficaIngresosSemana.swift in Sources */,
+				914AA8D630642E71006526CE /* GraficaIngresos.swift in Sources */,
 				914AA8D730642E71006526CE /* ColumnaMonto.swift in Sources */,
 				914AA8D830642E71006526CE /* RenglonBarraLateral.swift in Sources */,
-				914AA8D930642E71006526CE /* SemanaIngreso.swift in Sources */,
 				914AA8DA30642E71006526CE /* TarjetaMetas.swift in Sources */,
 				914AA8DB30642E71006526CE /* BarraSuperior.swift in Sources */,
 				914AA8DD30642E71006526CE /* BarraLateral.swift in Sources */,

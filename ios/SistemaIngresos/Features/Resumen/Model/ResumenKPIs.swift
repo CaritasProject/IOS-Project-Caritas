@@ -7,7 +7,7 @@ struct ResumenKPIs: Codable {
     let donantesEnRiesgo: DonantesEnRiesgo
     let topDiez: TopDiez
     let telemarketing: Telemarketing
-    let ingresosPorSemana: [SemanaIngreso]
+    let ingresosPorTramo: [TramoIngreso]
 }
 
 struct PeriodoResumen: Codable {
@@ -47,4 +47,14 @@ struct Telemarketing: Codable {
     let llamadas: Int
     let compromisosGenerados: Int
     let tasaConversion: Double
+}
+
+/// Una barra de la gráfica: un día, una semana o un mes, según el periodo.
+struct TramoIngreso: Codable, Identifiable {
+    let orden: Int
+    let etiqueta: String
+    let comprometido: Double
+    let cobrado: Double
+
+    var id: Int { return orden }
 }

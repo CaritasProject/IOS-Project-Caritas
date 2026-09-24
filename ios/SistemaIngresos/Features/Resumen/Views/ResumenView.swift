@@ -92,7 +92,9 @@ struct ResumenView: View {
                     .frame(maxHeight: .infinity)
             }
 
-            GraficaIngresosSemana(semanas: datos.ingresosPorSemana, alturaMaxima: 190)
+            GraficaIngresos(titulo: tituloGrafica(datos.periodo.clave),
+                            tramos: datos.ingresosPorTramo,
+                            alturaMaxima: 190)
         } else if cargando {
             ProgressView()
                 .padding(.top, 80)
@@ -102,6 +104,15 @@ struct ResumenView: View {
                 .foregroundColor(paletaResumen.textoSecundario)
                 .padding(.top, 80)
         }
+    }
+
+    /// Usa la clave que regresó la API y no el botón elegido, para que el título
+    /// no cambie antes que las barras mientras carga el periodo nuevo.
+    private func tituloGrafica(_ clave: String) -> String {
+        if clave == "dia" { return "Ingresos del día" }
+        if clave == "semana" { return "Ingresos por día" }
+        if clave == "ano" { return "Ingresos por mes" }
+        return "Ingresos por semana"
     }
 
     private func cargar() async {
