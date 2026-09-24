@@ -12,7 +12,8 @@ struct MetasView: View {
     @State private var periodoSeleccionado = 3
     @State private var metaSeleccionadaID: Int?
 
-    init(servicio: MetasService = MetasService()) {
+    init(servicio: MetasService? = nil) {
+        let servicio = servicio ?? MetasService()
         _servicio = StateObject(wrappedValue: servicio)
     }
 
