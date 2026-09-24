@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E1A0000000000000000000D2 /* VistaPreviaReporte.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A0000000000000000000D1 /* VistaPreviaReporte.swift */; };
+		E1A0000000000000000000C2 /* BotonCompartirReporte.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A0000000000000000000C1 /* BotonCompartirReporte.swift */; };
+		E1A0000000000000000000B2 /* PerfilView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A0000000000000000000B1 /* PerfilView.swift */; };
+		E1A0000000000000000000A2 /* AvatarUsuario.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A0000000000000000000A1 /* AvatarUsuario.swift */; };
 		C2B0000000000001META0001 /* MetaAvance.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B0000000000002META0002 /* MetaAvance.swift */; };
 		03236F1A61DFE827993BC4C0 /* DonantesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7863602C6ABD9F9BD2C4562 /* DonantesView.swift */; };
 		0745B5BCC14DCD68393DF2ED /* Formatos.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CCCBAC495F3B79B2395A770 /* Formatos.swift */; };
@@ -58,6 +62,10 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		E1A0000000000000000000D1 /* VistaPreviaReporte.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VistaPreviaReporte.swift; sourceTree = "<group>"; };
+		E1A0000000000000000000C1 /* BotonCompartirReporte.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BotonCompartirReporte.swift; sourceTree = "<group>"; };
+		E1A0000000000000000000B1 /* PerfilView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerfilView.swift; sourceTree = "<group>"; };
+		E1A0000000000000000000A1 /* AvatarUsuario.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarUsuario.swift; sourceTree = "<group>"; };
 		C2B0000000000002META0002 /* MetaAvance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetaAvance.swift; sourceTree = "<group>"; };
 		0291234F77EF2C72BFA88597 /* ConfigurarReporteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurarReporteView.swift; sourceTree = "<group>"; };
 		057A6FF83A984B3BB3FF9192 /* ReporteGeneradoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReporteGeneradoView.swift; sourceTree = "<group>"; };
@@ -233,11 +241,9 @@
 			isa = PBXGroup;
 			children = (
 				914AA8C530642E71006526CE /* .gitkeep */,
-				914AA8C630642E71006526CE /* BarraLateral.swift */,
 				914AA8C730642E71006526CE /* BarraSuperior.swift */,
 				914AA8C830642E71006526CE /* ColumnaMonto.swift */,
 				914AA8C930642E71006526CE /* GraficaIngresosSemana.swift */,
-				914AA8CA30642E71006526CE /* RenglonBarraLateral.swift */,
 				914AA8CB30642E71006526CE /* SelectorPeriodo.swift */,
 				914AA8CC30642E71006526CE /* SemanaIngreso.swift */,
 				914AA8CD30642E71006526CE /* TarjetaIndicador.swift */,
@@ -354,7 +360,10 @@
 		CFAF095F14134935FEFF6709 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				E1A0000000000000000000A1 /* AvatarUsuario.swift */,
 				A05368894E3D4A3BD4A9E212 /* BotonPrimario.swift */,
+				914AA8C630642E71006526CE /* BarraLateral.swift */,
+				914AA8CA30642E71006526CE /* RenglonBarraLateral.swift */,
 				90B36FD551FA0505A2F450A5 /* SemaforoRiesgo.swift */,
 				4B52D97430E6064D1A6D701A /* TarjetaResumen.swift */,
 			);
@@ -372,6 +381,7 @@
 		D09AD098A7BD1AE1F7CCB54F /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				E1A0000000000000000000B1 /* PerfilView.swift */,
 				83E1910E5E5F1417380F5F24 /* LoginView.swift */,
 			);
 			path = Views;
@@ -410,6 +420,8 @@
 			isa = PBXGroup;
 			children = (
 				35311DEC6086E3EF4B176D0C /* ReporteRow.swift */,
+				E1A0000000000000000000C1 /* BotonCompartirReporte.swift */,
+				E1A0000000000000000000D1 /* VistaPreviaReporte.swift */,
 				ACFA1D0C396EB4B14D7DE39F /* TarjetaDatoReporte.swift */,
 			);
 			path = Components;
@@ -509,6 +521,10 @@
 				1526DCE301347EF20D8DC62F /* Donativo.swift in Sources */,
 				0745B5BCC14DCD68393DF2ED /* Formatos.swift in Sources */,
 				676B526BCE6BB718E6784327 /* LoginService.swift in Sources */,
+				E1A0000000000000000000D2 /* VistaPreviaReporte.swift in Sources */,
+				E1A0000000000000000000C2 /* BotonCompartirReporte.swift in Sources */,
+				E1A0000000000000000000A2 /* AvatarUsuario.swift in Sources */,
+				E1A0000000000000000000B2 /* PerfilView.swift in Sources */,
 				AED8669BA5A9D958B661BAB1 /* LoginView.swift in Sources */,
 				39FF409AE3BC2D400C320AF9 /* Meta.swift in Sources */,
 				A26C13525353634CDC115225 /* MetasService.swift in Sources */,
@@ -605,11 +621,11 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SistemaIngresos/App/Info.plist;
-				INFOPLIST_FILE = SistemaIngresos/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UIRequiresFullScreen = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -634,11 +650,11 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SistemaIngresos/App/Info.plist;
-				INFOPLIST_FILE = SistemaIngresos/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UIRequiresFullScreen = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

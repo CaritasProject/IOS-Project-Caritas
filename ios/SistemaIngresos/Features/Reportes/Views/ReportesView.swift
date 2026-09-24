@@ -70,13 +70,7 @@ struct ReportesView: View {
 
             Spacer()
 
-            Text("MG")
-                .font(.subheadline)
-                .fontWeight(.semibold)
-                .foregroundColor(.white)
-                .frame(width: 40, height: 40)
-                .background(Palette.turquesa)
-                .clipShape(.circle)
+            AvatarUsuario()
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
@@ -136,10 +130,8 @@ struct ReportesView: View {
 
     var panelDerecho: some View {
         VStack {
-            if mostrandoGenerado {
-                ReporteGeneradoView(tipo: tipoElegido,
-                                    periodo: periodo,
-                                    formato: formatoElegido,
+            if mostrandoGenerado, let nuevo = listaReportes.first {
+                ReporteGeneradoView(reporte: nuevo,
                                     mostrandoConfigurar: $mostrandoConfigurar,
                                     mostrandoGenerado: $mostrandoGenerado)
 
@@ -182,4 +174,5 @@ struct ReportesView: View {
 
 #Preview {
     ReportesView()
+        .environmentObject(SesionService())
 }

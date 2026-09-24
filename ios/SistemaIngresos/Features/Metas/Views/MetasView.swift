@@ -65,12 +65,7 @@ struct MetasView: View {
 
             Spacer()
 
-            Text("MG")
-                .bold()
-                .foregroundColor(.white)
-                .frame(width: 45, height: 45)
-                .background(Palette.turquesa)
-                .clipShape(Circle())
+            AvatarUsuario(tamano: 45)
         }
         .padding()
         .background(Palette.superficie)
@@ -311,4 +306,5 @@ struct MetasView: View {
 
 #Preview(traits: .landscapeLeft) {
     MetasView(servicio: .previsualizacion)
+        .environmentObject(SesionService())
 }

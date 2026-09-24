@@ -1,13 +1,17 @@
 import calendar
-from datetime import date
+import csv
+import io
+from datetime import date, datetime
 
 import pyodbc
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, Response, jsonify, request
 from pydantic import ValidationError
 
+from core.archivos import archivo_excel, archivo_pdf, titulo_columna, valor_legible
 from core.auth import requiere_sesion
 from core.db import obtener_conexion
 from models.reporte import ConfiguracionReporte
+from routers.metas import CONSULTA_METAS, objetivo_prorrateado
 
 bp = Blueprint("reportes", __name__, url_prefix="/reportes")
 
@@ -28,6 +32,15 @@ MESES_LARGOS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio",
                 "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
 TRIMESTRES = ["primer", "segundo", "tercer", "cuarto"]
 
+FILTRO_ALCANCE = """
+      AND (NOT EXISTS (SELECT 1 FROM dbo.REPORTE_LINEA_ESTRATEGICA al WHERE al.ID_REPORTE = h.ID_REPORTE)
+           OR d.ID_LINEA_ESTRATEGICA IN (SELECT al.ID_LINEA_ESTRATEGICA FROM dbo.REPORTE_LINEA_ESTRATEGICA al
+                                         WHERE al.ID_REPORTE = h.ID_REPORTE))
+      AND (NOT EXISTS (SELECT 1 FROM dbo.REPORTE_CAMPANA_FINANCIERA ac WHERE ac.ID_REPORTE = h.ID_REPORTE)
+           OR d.ID_CAMPANA_FINANCIERA IN (SELECT ac.ID_CAMPANA_FINANCIERA FROM dbo.REPORTE_CAMPANA_FINANCIERA ac
+                                          WHERE ac.ID_REPORTE = h.ID_REPORTE))
+"""
+
 CONSULTA_REPORTES = """
 SELECT h.ID_REPORTE, t.NOMBRE AS TIPO_REPORTE, h.FECHA_DESDE, h.FECHA_HASTA,
        f.NOMBRE AS FORMATO, h.FECHA_GENERACION, m.COMPROMETIDO, m.COBRADO
@@ -39,15 +52,45 @@ CROSS APPLY (
            ISNULL(SUM(b.IMPORTE_COBRADO), 0) AS COBRADO
     FROM dbo.OPE_BITACORA_PAGOS_DONATIVOS b
     JOIN dbo.OPE_DONATIVOS_DONANTE d ON d.ID_DONATIVO = b.ID_DONATIVO
-    WHERE b.FECHA_COBRO BETWEEN h.FECHA_DESDE AND h.FECHA_HASTA
-      AND (NOT EXISTS (SELECT 1 FROM dbo.REPORTE_LINEA_ESTRATEGICA al WHERE al.ID_REPORTE = h.ID_REPORTE)
-           OR d.ID_LINEA_ESTRATEGICA IN (SELECT al.ID_LINEA_ESTRATEGICA FROM dbo.REPORTE_LINEA_ESTRATEGICA al
-                                         WHERE al.ID_REPORTE = h.ID_REPORTE))
-      AND (NOT EXISTS (SELECT 1 FROM dbo.REPORTE_CAMPANA_FINANCIERA ac WHERE ac.ID_REPORTE = h.ID_REPORTE)
-           OR d.ID_CAMPANA_FINANCIERA IN (SELECT ac.ID_CAMPANA_FINANCIERA FROM dbo.REPORTE_CAMPANA_FINANCIERA ac
-                                          WHERE ac.ID_REPORTE = h.ID_REPORTE))
-) m
+    WHERE b.FECHA_COBRO BETWEEN h.FECHA_DESDE AND h.FECHA_HASTA""" + FILTRO_ALCANCE + """) m
 """
+
+CONSULTA_COBROS = """
+SELECT b.ID_BITACORA, b.FECHA_COBRO, b.FECHA_VENCIMIENTO, b.FECHA_PAGO,
+       COALESCE(o.RAZON_SOCIAL, CONCAT_WS(N' ', o.NOMBRE, o.A_PATERNO, o.A_MATERNO)) AS DONANTE,
+       le.NOMBRE AS LINEA, a.NOMBRE AS ASIGNACION, c.NOMBRE AS CAMPANA, fp.NOMBRE AS FORMA_PAGO,
+       b.IMPORTE, b.IMPORTE_COBRADO, ep.NOMBRE AS ESTATUS
+FROM dbo.HISTORIAL_REPORTE h
+JOIN dbo.OPE_BITACORA_PAGOS_DONATIVOS b ON b.FECHA_COBRO BETWEEN h.FECHA_DESDE AND h.FECHA_HASTA
+JOIN dbo.OPE_DONATIVOS_DONANTE d        ON d.ID_DONATIVO = b.ID_DONATIVO
+JOIN dbo.OPE_DONANTES o                 ON o.ID_DONANTE = d.ID_DONANTE
+JOIN dbo.CAT_LINEA_ESTRATEGICA le       ON le.ID_LINEA_ESTRATEGICA = d.ID_LINEA_ESTRATEGICA
+JOIN dbo.CAT_ASIGNACION a               ON a.ID_ASIGNACION = d.ID_ASIGNACION
+LEFT JOIN dbo.CAT_CAMPANA_FINANCIERA c  ON c.ID_CAMPANA_FINANCIERA = d.ID_CAMPANA_FINANCIERA
+JOIN dbo.CAT_FORMA_PAGO fp              ON fp.ID_FORMA_PAGO = d.ID_FORMA_PAGO
+JOIN dbo.CAT_ESTATUS_PAGO ep            ON ep.ID_ESTATUS_PAGO = b.ESTATUS_PAGO
+WHERE h.ID_REPORTE = ?""" + FILTRO_ALCANCE + """
+ORDER BY b.FECHA_COBRO, b.ID_BITACORA
+"""
+
+CONSULTA_LLAMADAS = """
+SELECT r.ID_LLAMADA, r.FECHA_LLAMADA,
+       COALESCE(o.RAZON_SOCIAL, CONCAT_WS(N' ', o.NOMBRE, o.A_PATERNO, o.A_MATERNO)) AS DONANTE,
+       u.NOMBRE AS TELEFONISTA, r.RESULTADO, r.COMENTARIOS
+FROM dbo.HISTORIAL_REPORTE h
+JOIN dbo.REGISTRO_LLAMADA r ON CAST(r.FECHA_LLAMADA AS DATE) BETWEEN h.FECHA_DESDE AND h.FECHA_HASTA
+JOIN dbo.OPE_DONANTES o     ON o.ID_DONANTE = r.ID_DONANTE
+JOIN dbo.USUARIO u          ON u.ID_USUARIO = r.ID_USUARIO
+WHERE h.ID_REPORTE = ?
+ORDER BY r.FECHA_LLAMADA, r.ID_LLAMADA
+"""
+
+COLUMNAS_COBROS = ["id_cobro", "fecha_cobro", "fecha_vencimiento", "fecha_pago", "donante",
+                   "linea_estrategica", "asignacion", "campana", "forma_pago",
+                   "importe_comprometido", "importe_cobrado", "estatus"]
+COLUMNAS_LLAMADAS = ["id_llamada", "fecha_llamada", "donante", "telefonista", "resultado", "comentarios"]
+COLUMNAS_METAS = ["id_meta", "asignacion", "desde", "hasta", "objetivo_total", "objetivo_periodo",
+                  "comprometido", "cobrado", "faltante", "porcentaje_avance"]
 
 
 def error(mensaje: str, codigo: int):
@@ -189,3 +232,163 @@ def generar_reporte():
 
     cursor.execute(CONSULTA_REPORTES + " WHERE h.ID_REPORTE = ?", id_nuevo)
     return jsonify(fila_a_json(cursor.fetchone())), 201
+
+
+def texto_fecha(valor) -> str:
+    return valor.isoformat() if valor else ""
+
+
+def texto_monto(valor) -> str:
+    return f"{valor or 0:.2f}"
+
+
+def filas_de_cobros(cursor, id_reporte: int, es_cobranza: bool):
+    cursor.execute(CONSULTA_COBROS, id_reporte)
+    hoy = date.today()
+    filas = []
+    for c in cursor.fetchall():
+        fila = [c.ID_BITACORA, texto_fecha(c.FECHA_COBRO), texto_fecha(c.FECHA_VENCIMIENTO),
+                texto_fecha(c.FECHA_PAGO), c.DONANTE, c.LINEA, c.ASIGNACION, c.CAMPANA or "",
+                c.FORMA_PAGO, texto_monto(c.IMPORTE), texto_monto(c.IMPORTE_COBRADO), c.ESTATUS]
+        if es_cobranza:
+            vencido = c.ESTATUS == "RECHAZADO" or (c.ESTATUS == "PENDIENTE" and c.FECHA_VENCIMIENTO < hoy)
+            dias_atraso = max((hoy - c.FECHA_VENCIMIENTO).days, 0) if vencido else 0
+            fila += ["SÍ" if vencido else "NO", dias_atraso]
+        filas.append(fila)
+    if es_cobranza:
+        filas.sort(key=lambda f: -f[-1])
+        return COLUMNAS_COBROS + ["vencido", "dias_atraso"], filas
+    return COLUMNAS_COBROS, filas
+
+
+def filas_de_llamadas(cursor, id_reporte: int):
+    cursor.execute(CONSULTA_LLAMADAS, id_reporte)
+    filas = [[l.ID_LLAMADA, l.FECHA_LLAMADA.strftime("%Y-%m-%d %H:%M"), l.DONANTE,
+              l.TELEFONISTA, l.RESULTADO, l.COMENTARIOS or ""] for l in cursor.fetchall()]
+    return COLUMNAS_LLAMADAS, filas
+
+
+def filas_de_metas(cursor, desde: date, hasta: date):
+    cursor.execute(CONSULTA_METAS + " ORDER BY a.NOMBRE", desde, hasta)
+    filas = []
+    for m in cursor.fetchall():
+        objetivo = objetivo_prorrateado(m)
+        cobrado = m.COBRADO or 0
+        porcentaje = int((cobrado / objetivo * 100).to_integral_value()) if objetivo else 0
+        filas.append([m.ID_META, m.ASIGNACION, texto_fecha(m.INICIO), texto_fecha(m.FIN),
+                      texto_monto(m.MONTO_META), texto_monto(objetivo), texto_monto(m.COMPROMETIDO),
+                      texto_monto(cobrado), texto_monto(max(objetivo - cobrado, 0)), porcentaje])
+    return COLUMNAS_METAS, filas
+
+
+def respuesta_csv(nombre_archivo: str, columnas: list, filas: list) -> Response:
+    salida = io.StringIO()
+    escritor = csv.writer(salida)
+    escritor.writerow(columnas)
+    escritor.writerows(filas)
+    return Response("\ufeff" + salida.getvalue(), mimetype="text/csv",
+                    headers={"Content-Disposition": f'attachment; filename="{nombre_archivo}"'})
+
+
+EXTENSIONES = {"PDF": "pdf", "EXCEL": "xlsx", "CSV": "csv"}
+TIPOS_MIME = {"pdf": "application/pdf",
+              "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}
+
+
+def alcance(cursor, id_reporte: int, tabla: str, catalogo: str, columna_id: str) -> str:
+    cursor.execute(f"""SELECT c.NOMBRE FROM dbo.{tabla} a
+                       JOIN dbo.{catalogo} c ON c.{columna_id} = a.{columna_id}
+                       WHERE a.ID_REPORTE = ? ORDER BY c.NOMBRE""", id_reporte)
+    nombres = [f.NOMBRE for f in cursor.fetchall()]
+    return ", ".join(nombres) if nombres else "Todas"
+
+
+def contenido_del_reporte(cursor, id_reporte: int):
+    cursor.execute(CONSULTA_REPORTES + " WHERE h.ID_REPORTE = ?", id_reporte)
+    reporte = cursor.fetchone()
+    if reporte is None:
+        return None
+
+    tipo, desde, hasta = reporte.TIPO_REPORTE, reporte.FECHA_DESDE, reporte.FECHA_HASTA
+    if tipo == "TELEMARKETING":
+        columnas, filas = filas_de_llamadas(cursor, id_reporte)
+    elif tipo == "METAS":
+        columnas, filas = filas_de_metas(cursor, desde, hasta)
+    else:
+        columnas, filas = filas_de_cobros(cursor, id_reporte, tipo == "COBRANZA")
+    return reporte, columnas, filas
+
+
+def detalles_del_reporte(cursor, reporte) -> list:
+    return [
+        ("Tipo", TIPO_PARA_APP[reporte.TIPO_REPORTE]),
+        ("Periodo", f"{reporte.FECHA_DESDE.isoformat()} a {reporte.FECHA_HASTA.isoformat()}"),
+        ("Línea estratégica", alcance(cursor, reporte.ID_REPORTE, "REPORTE_LINEA_ESTRATEGICA",
+                                      "CAT_LINEA_ESTRATEGICA", "ID_LINEA_ESTRATEGICA")),
+        ("Campaña", alcance(cursor, reporte.ID_REPORTE, "REPORTE_CAMPANA_FINANCIERA",
+                            "CAT_CAMPANA_FINANCIERA", "ID_CAMPANA_FINANCIERA")),
+        ("Comprometido", f"${reporte.COMPROMETIDO:,.2f}"),
+        ("Cobrado", f"${reporte.COBRADO:,.2f}"),
+        ("Datos al", datetime.now().strftime("%Y-%m-%d %H:%M")),
+    ]
+
+
+def nombre_de_archivo(reporte, extension: str) -> str:
+    return (f"reporte-{reporte.ID_REPORTE}_{reporte.TIPO_REPORTE.lower()}_"
+            f"{reporte.FECHA_DESDE.isoformat()}_{reporte.FECHA_HASTA.isoformat()}.{extension}")
+
+
+@bp.get("/<int:id_reporte>/csv")
+def descargar_csv(id_reporte: int):
+    cursor = obtener_conexion().cursor()
+    contenido = contenido_del_reporte(cursor, id_reporte)
+    if contenido is None:
+        return error(f"No existe el reporte {id_reporte}.", 404)
+
+    reporte, columnas, filas = contenido
+    return respuesta_csv(nombre_de_archivo(reporte, "csv"), columnas, filas)
+
+
+@bp.get("/<int:id_reporte>/archivo")
+def descargar_archivo(id_reporte: int):
+    cursor = obtener_conexion().cursor()
+    contenido = contenido_del_reporte(cursor, id_reporte)
+    if contenido is None:
+        return error(f"No existe el reporte {id_reporte}.", 404)
+
+    reporte, columnas, filas = contenido
+    formato = request.args.get("formato", reporte.FORMATO).strip().upper()
+    if formato not in EXTENSIONES:
+        return error("El formato debe ser PDF, Excel o CSV.", 400)
+
+    extension = EXTENSIONES[formato]
+    nombre = nombre_de_archivo(reporte, extension)
+    if extension == "csv":
+        return respuesta_csv(nombre, columnas, filas)
+
+    titulo = nombre_del_reporte(reporte.TIPO_REPORTE, reporte.FECHA_DESDE, reporte.FECHA_HASTA)
+    detalles = detalles_del_reporte(cursor, reporte)
+    if extension == "pdf":
+        datos = archivo_pdf(titulo, detalles, columnas, filas)
+    else:
+        datos = archivo_excel(titulo, detalles, columnas, filas)
+    return Response(datos, mimetype=TIPOS_MIME[extension],
+                    headers={"Content-Disposition": f'attachment; filename="{nombre}"'})
+
+
+@bp.get("/<int:id_reporte>/datos")
+def datos_para_vista_previa(id_reporte: int):
+    cursor = obtener_conexion().cursor()
+    contenido = contenido_del_reporte(cursor, id_reporte)
+    if contenido is None:
+        return error(f"No existe el reporte {id_reporte}.", 404)
+
+    _, columnas, filas = contenido
+    return jsonify({
+        "columnas": [{"id": i, "nombre": titulo_columna(c)} for i, c in enumerate(columnas)],
+        "filas": [{"id": i,
+                   "celdas": [{"id": j, "valor": valor_legible(c, v)}
+                              for j, (c, v) in enumerate(zip(columnas, fila))]}
+                  for i, fila in enumerate(filas)],
+        "datosAl": datetime.now().strftime("%d/%m/%Y %H:%M"),
+    })

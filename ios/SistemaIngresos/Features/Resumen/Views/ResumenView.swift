@@ -16,32 +16,20 @@ struct ResumenView: View {
     private let clavesPeriodo = ["dia", "semana", "mes", "trimestre", "ano"]
 
     var body: some View {
-        HStack(spacing: 0) {
-            BarraLateral()
+        VStack(spacing: 0) {
+            BarraSuperior(titulo: "Resumen",
+                          periodoSeleccionado: $periodoSeleccionado)
 
-            Rectangle()
-                .fill(paletaResumen.separador)
-                .frame(width: 1)
-
-            VStack(spacing: 0) {
-                BarraSuperior(titulo: "Resumen",
-                              iniciales: "MG",
-                              periodoSeleccionado: $periodoSeleccionado)
-
-                ScrollView {
-                    VStack(spacing: 20) {
-                        encabezado
-                        contenido
-                    }
-                    .padding(24)
+            ScrollView {
+                VStack(spacing: 20) {
+                    encabezado
+                    contenido
                 }
+                .padding(24)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(paletaResumen.fondo)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(paletaResumen.fondo)
-        .ignoresSafeArea()
         .task {
             await cargar()
         }
@@ -130,4 +118,5 @@ struct ResumenView: View {
 
 #Preview {
     ResumenView()
+        .environmentObject(SesionService())
 }
