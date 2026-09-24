@@ -38,8 +38,13 @@ final class SesionService: ObservableObject {
         do {
             let respuesta = try await loginService.iniciarSesion(correo: correoLimpio, password: password)
             self.token = respuesta.token
+            // Lo dejamos en APIClient para que todos los servicios lo manden en sus peticiones.
+            APIClient.tokenSesion = respuesta.token
             self.usuario = respuesta.usuario
             self.sesionIniciada = true
+        } catch APIClient.ErrorAPI.http(401) {
+            // En el login, un 401 quiere decir que el correo o la contraseña no coinciden.
+            self.mensajeError = "Correo o contraseña incorrectos."
         } catch let error as APIClient.ErrorAPI {
             self.mensajeError = error.errorDescription ?? "No se pudo iniciar sesión."
         } catch {
@@ -51,6 +56,7 @@ final class SesionService: ObservableObject {
     func cerrarSesion() {
         self.usuario = nil
         self.token = nil
+        APIClient.tokenSesion = nil
         self.sesionIniciada = false
         self.mensajeError = nil
     }

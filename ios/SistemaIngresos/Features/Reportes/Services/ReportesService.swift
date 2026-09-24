@@ -8,7 +8,13 @@ func obtenerReportes() async throws -> [Reporte] {
         throw URLError(.badURL)
     }
 
-    let (data, response) = try await URLSession.shared.data(from: url)
+    // Usamos URLRequest (como en el POST) para poder mandar el token de la sesión.
+    var request = URLRequest(url: url)
+    if let token = APIClient.tokenSesion {
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    }
+
+    let (data, response) = try await URLSession.shared.data(for: request)
 
     guard let httpResponse = response as? HTTPURLResponse else {
         print("Respuesta no válida del servidor")
@@ -31,7 +37,13 @@ func obtenerReporte(idReporte: Int) async throws -> Reporte {
         throw URLError(.badURL)
     }
 
-    let (data, response) = try await URLSession.shared.data(from: url)
+    // Usamos URLRequest (como en el POST) para poder mandar el token de la sesión.
+    var request = URLRequest(url: url)
+    if let token = APIClient.tokenSesion {
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    }
+
+    let (data, response) = try await URLSession.shared.data(for: request)
 
     guard let httpResponse = response as? HTTPURLResponse else {
         print("Respuesta no válida del servidor")
@@ -57,6 +69,9 @@ func generarReporte(configuracion: ConfiguracionReporte) async throws -> Reporte
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    if let token = APIClient.tokenSesion {
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    }
     request.httpBody = try JSONEncoder().encode(configuracion)
 
     let (data, response) = try await URLSession.shared.data(for: request)

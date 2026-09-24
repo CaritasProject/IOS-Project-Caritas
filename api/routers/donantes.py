@@ -8,6 +8,7 @@ from decimal import Decimal
 
 from flask import Blueprint, jsonify
 
+from core.auth import requiere_sesion
 from core.db import obtener_conexion
 
 
@@ -124,6 +125,7 @@ def serializar_donante(row, pagos=None, llamadas=None):
 
 
 @bp.get("")
+@requiere_sesion
 def listar_donantes():
     """Regresa el listado resumido de donantes."""
     cursor = obtener_conexion().cursor()
@@ -134,6 +136,7 @@ def listar_donantes():
 
 
 @bp.get("/<int:donante_id>")
+@requiere_sesion
 def obtener_donante(donante_id):
     """Regresa la ficha, pagos y llamadas de un donante."""
     cursor = obtener_conexion().cursor()
