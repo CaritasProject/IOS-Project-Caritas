@@ -9,7 +9,7 @@ import Charts
 struct MetasView: View {
 
     @StateObject private var servicio: MetasService
-    @State private var periodo: Periodo = .trimestre
+    @State private var periodoSeleccionado = 3
     @State private var metaSeleccionadaID: Int?
 
     init(servicio: MetasService = MetasService()) {
@@ -22,7 +22,9 @@ struct MetasView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            encabezado
+            BarraSuperior(titulo: "Metas",
+                          mostrarPeriodo: true,
+                          periodoSeleccionado: $periodoSeleccionado)
             Divider()
             HStack(spacing: 0) {
                 listaMetas
@@ -33,35 +35,10 @@ struct MetasView: View {
                     .background(Palette.fondo)
             }
         }
-        .task { await servicio.cargar(periodo: periodo) }
-        .onChange(of: periodo) { _, nuevo in
-            Task { await servicio.cargar(periodo: nuevo) }
+        .task { await servicio.cargar(periodo: Periodo.allCases[periodoSeleccionado]) }
+        .onChange(of: periodoSeleccionado) { _, nuevo in
+            Task { await servicio.cargar(periodo: Periodo.allCases[nuevo]) }
         }
-    }
-
-
-    private var encabezado: some View {
-        HStack {
-            Text("Metas")
-                .font(.title2)
-                .bold()
-
-            Spacer()
-
-            Picker(selection: $periodo, label: Text("Periodo")) {
-                ForEach(Periodo.allCases) { opcion in
-                    Text(opcion.etiqueta).tag(opcion)
-                }
-            }
-            .pickerStyle(.segmented)
-            .frame(width: 450)
-
-            Spacer()
-
-            AvatarUsuario(tamano: 45)
-        }
-        .padding()
-        .background(Palette.superficie)
     }
 
 

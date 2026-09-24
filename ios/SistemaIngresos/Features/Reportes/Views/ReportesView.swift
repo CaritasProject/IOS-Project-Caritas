@@ -13,15 +13,15 @@ struct ReportesView: View {
     @State private var tipoElegido = "Ingresos"
     @State private var formatoElegido = "PDF"
 
-    @State private var periodo = "Mes"
-
     var body: some View {
         ZStack {
             Palette.fondo
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                barraSuperior
+                BarraSuperior(titulo: "Reportes",
+                              mostrarPeriodo: false,
+                              periodoSeleccionado: .constant(0))
 
                 Divider()
 
@@ -47,34 +47,6 @@ struct ReportesView: View {
         .alert(mensajeError, isPresented: $mostrarError) {
             Button("OK") {}
         }
-    }
-
-    var barraSuperior: some View {
-        HStack {
-            Text("Reportes")
-                .font(.title2)
-                .fontWeight(.bold)
-                .foregroundColor(.primary)
-
-            Spacer()
-
-            Picker(selection: $periodo, label: Text("Periodo")) {
-                Text("Día").tag("Día")
-                Text("Semana").tag("Semana")
-                Text("Mes").tag("Mes")
-                Text("Trimestre").tag("Trimestre")
-                Text("Año").tag("Año")
-            }
-            .pickerStyle(.segmented)
-            .frame(width: 440)
-
-            Spacer()
-
-            AvatarUsuario()
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 12)
-        .background(Palette.superficie)
     }
 
     var bibliotecaIzquierda: some View {

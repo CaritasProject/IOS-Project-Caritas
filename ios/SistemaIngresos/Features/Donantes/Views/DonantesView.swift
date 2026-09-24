@@ -12,6 +12,18 @@ struct DonantesView: View {
     @State private var selectedSection: DetailSection = .payments
 
     var body: some View {
+        VStack(spacing: 0) {
+            BarraSuperior(titulo: "Donantes",
+                          mostrarPeriodo: false,
+                          periodoSeleccionado: .constant(0))
+
+            Divider()
+
+            contenido
+        }
+    }
+
+    private var contenido: some View {
         HStack(spacing: 0) {
             donorPanel
                 .frame(width: 380)
@@ -245,4 +257,5 @@ struct DonantesView: View {
 #Preview {
     DonantesView()
         .frame(width: 1180, height: 760)
+        .environmentObject(SesionService())
 }
