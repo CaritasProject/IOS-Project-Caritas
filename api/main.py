@@ -1,9 +1,3 @@
-"""Sistema de Ingresos — Cáritas de Monterrey, A.B.P.
-
-ARCHIVO COMPARTIDO: crea la aplicación Flask y registra los cinco blueprints.
-Avisa al equipo antes de modificarlo.
-"""
-
 from flask import Flask
 
 from core.config import configuracion
@@ -16,7 +10,6 @@ from routers.resumen import bp as bp_resumen
 
 
 def crear_app() -> Flask:
-    """Fábrica de la aplicación: aquí se arma todo y se registran los blueprints."""
     app = Flask(__name__)
     app.config["ENTORNO"] = configuracion.entorno
     app.config["JSON_SORT_KEYS"] = False
@@ -24,7 +17,6 @@ def crear_app() -> Flask:
     # Cierra la conexión a SQL Server al terminar cada petición.
     app.teardown_appcontext(cerrar_conexion)
 
-    # Un blueprint por pantalla. Cada uno trae su propio url_prefix.
     app.register_blueprint(bp_auth)
     app.register_blueprint(bp_resumen)
     app.register_blueprint(bp_donantes)
@@ -33,7 +25,6 @@ def crear_app() -> Flask:
 
     @app.get("/salud")
     def salud():
-        """Comprobación rápida de que la API responde."""
         return {"estado": "ok", "entorno": configuracion.entorno}
 
     @app.get("/hello")

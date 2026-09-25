@@ -1,9 +1,3 @@
-"""Conexión a SQL Server — ARCHIVO COMPARTIDO.
-
-Todos los blueprints obtienen la conexión desde aquí.
-Avisa al equipo antes de modificarlo.
-"""
-
 from flask import g
 import pyodbc
 
@@ -11,7 +5,6 @@ from core.config import configuracion
 
 
 def cadena_conexion() -> str:
-    """Arma la cadena de conexión ODBC a SQL Server desde la configuración."""
     required = {
         "SQLSERVER_HOST": configuracion.sqlserver_host,
         "SQLSERVER_BASE": configuracion.sqlserver_base,
@@ -36,10 +29,7 @@ def cadena_conexion() -> str:
 
 
 def obtener_conexion():
-    """Devuelve la conexión de la petición actual, creándola la primera vez.
-
-    Se guarda en `g` para que una misma petición reutilice una sola conexión.
-    """
+    """Se guarda en `g` para que cada petición use una sola conexión."""
     if "conexion" not in g:
         g.conexion = pyodbc.connect(cadena_conexion())
     return g.conexion
