@@ -7,6 +7,7 @@ from routers.donantes import bp as bp_donantes
 from routers.metas import bp as bp_metas
 from routers.reportes import bp as bp_reportes
 from routers.resumen import bp as bp_resumen
+from routers.visitas import bp as bp_visitas
 
 
 def crear_app() -> Flask:
@@ -22,6 +23,7 @@ def crear_app() -> Flask:
     app.register_blueprint(bp_donantes)
     app.register_blueprint(bp_reportes)
     app.register_blueprint(bp_metas)
+    app.register_blueprint(bp_visitas)
 
     @app.get("/salud")
     def salud():

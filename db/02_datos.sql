@@ -29,11 +29,13 @@ DELETE FROM dbo.HISTORIAL_REPORTE;
 DELETE FROM dbo.CAT_FORMATO_REPORTE;
 DELETE FROM dbo.CAT_TIPO_REPORTE;
 DELETE FROM dbo.META;
+DELETE FROM dbo.VISITA_RECOLECCION;
 DELETE FROM dbo.REGISTRO_LLAMADA;
 DELETE FROM dbo.OPE_BITACORA_PAGOS_DONATIVOS;
 DELETE FROM dbo.OPE_DONATIVOS_DONANTE;
 DELETE FROM dbo.OPE_DONANTES;
 DELETE FROM dbo.USUARIO;
+DELETE FROM dbo.CAT_MUNICIPIO;
 DELETE FROM dbo.RECOLECTOR;
 DELETE FROM dbo.CAT_ROL;
 DELETE FROM dbo.CAT_ESTATUS_PAGO;
@@ -156,6 +158,28 @@ INSERT INTO dbo.RECOLECTOR (NOMBRE, ZONA) VALUES
     (NULL, N'OTROS (ZUAZUA, EL CARMEN, CIÉNEGA DE FLORES, SALINAS VICTORIA, SANTIAGO)'),
     (NULL, N'SAN NICOLÁS Y APODACA'),
     (NULL, N'SAN PEDRO, SANTA CATARINA Y GARCÍA-CENTRO');
+
+-- Municipios de cada zona. Monterrey y García se reparten entre dos zonas;
+-- se toman Centro y Sur de Monterrey y García-Centro.
+INSERT INTO dbo.CAT_MUNICIPIO (ID_MUNICIPIO, NOMBRE, ID_RECOLECTOR)
+SELECT m.ID_MUNICIPIO, m.NOMBRE, r.ID_RECOLECTOR
+FROM (VALUES
+    (1,  N'Apodaca',                 N'SAN NICOLÁS Y APODACA'),
+    (2,  N'Ciénega de Flores',       N'OTROS (ZUAZUA, EL CARMEN, CIÉNEGA DE FLORES, SALINAS VICTORIA, SANTIAGO)'),
+    (3,  N'El Carmen',               N'OTROS (ZUAZUA, EL CARMEN, CIÉNEGA DE FLORES, SALINAS VICTORIA, SANTIAGO)'),
+    (4,  N'García',                  N'SAN PEDRO, SANTA CATARINA Y GARCÍA-CENTRO'),
+    (5,  N'General Escobedo',        N'MONTERREY PONIENTE, ESCOBEDO Y GARCÍA-LINCOLN'),
+    (6,  N'General Zuazua',          N'OTROS (ZUAZUA, EL CARMEN, CIÉNEGA DE FLORES, SALINAS VICTORIA, SANTIAGO)'),
+    (7,  N'Guadalupe',               N'GUADALUPE, JUÁREZ Y CARRETERA NACIONAL'),
+    (8,  N'Juárez',                  N'GUADALUPE, JUÁREZ Y CARRETERA NACIONAL'),
+    (9,  N'Monterrey',               N'CENTRO Y SUR DE MONTERREY'),
+    (10, N'Salinas Victoria',        N'OTROS (ZUAZUA, EL CARMEN, CIÉNEGA DE FLORES, SALINAS VICTORIA, SANTIAGO)'),
+    (11, N'San Nicolás de los Garza', N'SAN NICOLÁS Y APODACA'),
+    (12, N'San Pedro Garza García',  N'SAN PEDRO, SANTA CATARINA Y GARCÍA-CENTRO'),
+    (13, N'Santa Catarina',          N'SAN PEDRO, SANTA CATARINA Y GARCÍA-CENTRO'),
+    (14, N'Santiago',                N'OTROS (ZUAZUA, EL CARMEN, CIÉNEGA DE FLORES, SALINAS VICTORIA, SANTIAGO)')
+) AS m (ID_MUNICIPIO, NOMBRE, ZONA)
+JOIN dbo.RECOLECTOR r ON r.ZONA = m.ZONA;
 
 /* =============================================================================
    USUARIOS (perfil del prototipo y agentes que aparecen en la bitácora)
