@@ -36,6 +36,63 @@ def listar_municipios():
     return jsonify(municipios)
 
 
+@bp.get("/compromisos/<int:id_donativo>")
+@requiere_rol("TELEFONISTA")
+def consultar_compromiso(id_donativo: int):
+    cursor = obtener_conexion().cursor()
+    cursor.execute(
+        """SELECT d.ID_DONATIVO, d.IMPORTE, d.PAGO_UNICO,
+                  o.NOMBRE, o.A_PATERNO, o.A_MATERNO, o.RAZON_SOCIAL,
+                  fp.NOMBRE AS FORMA_PAGO, f.NOMBRE AS FRECUENCIA, tf.NOMBRE AS TIPO_FRECUENCIA
+           FROM dbo.OPE_DONATIVOS_DONANTE d
+           JOIN dbo.OPE_DONANTES o ON o.ID_DONANTE = d.ID_DONANTE
+           JOIN dbo.CAT_FORMA_PAGO fp ON fp.ID_FORMA_PAGO = d.ID_FORMA_PAGO
+           LEFT JOIN dbo.CAT_FRECUENCIA f ON f.ID_FRECUENCIA = d.ID_FRECUENCIA
+           LEFT JOIN dbo.CAT_TIPO_FRECUENCIA tf ON tf.ID_TIPO_FRECUENCIA = d.ID_TIPO_FRECUENCIA
+           WHERE d.ID_DONATIVO = ?""",
+        id_donativo)
+    compromiso = cursor.fetchone()
+    if compromiso is None:
+        return error(f"No existe el compromiso {id_donativo}.", 404)
+
+    if compromiso.RAZON_SOCIAL:
+        donante = compromiso.RAZON_SOCIAL
+    else:
+        donante = f"{compromiso.NOMBRE} {compromiso.A_PATERNO} {compromiso.A_MATERNO or ''}".strip()
+
+    if compromiso.PAGO_UNICO:
+        frecuencia = "Pago único"
+    else:
+        frecuencia = f"{compromiso.FRECUENCIA.capitalize()} · {compromiso.TIPO_FRECUENCIA.capitalize()}"
+
+    cursor.execute(
+        """SELECT v.ID_VISITA, b.FECHA_COBRO, v.HORA_ACORDADA, r.ZONA
+           FROM dbo.VISITA_RECOLECCION v
+           JOIN dbo.OPE_BITACORA_PAGOS_DONATIVOS b ON b.ID_BITACORA = v.ID_BITACORA
+           JOIN dbo.CAT_ESTATUS_PAGO e ON e.ID_ESTATUS_PAGO = b.ESTATUS_PAGO
+           JOIN dbo.RECOLECTOR r ON r.ID_RECOLECTOR = b.ID_RECOLECTOR
+           WHERE b.ID_DONATIVO = ? AND e.NOMBRE = N'PENDIENTE'""",
+        id_donativo)
+    pendiente = cursor.fetchone()
+    visita_pendiente = None
+    if pendiente is not None:
+        visita_pendiente = {
+            "id": pendiente.ID_VISITA,
+            "fecha": pendiente.FECHA_COBRO.isoformat(),
+            "hora": pendiente.HORA_ACORDADA.strftime("%H:%M"),
+            "zona": pendiente.ZONA,
+        }
+
+    return jsonify({
+        "idDonativo": compromiso.ID_DONATIVO,
+        "donante": donante,
+        "monto": float(compromiso.IMPORTE),
+        "formaPago": compromiso.FORMA_PAGO.capitalize(),
+        "frecuencia": frecuencia,
+        "visitaPendiente": visita_pendiente,
+    })
+
+
 @bp.post("")
 @requiere_rol("TELEFONISTA")
 def agendar_visita():
