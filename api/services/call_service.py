@@ -144,11 +144,13 @@ def create_commitment(cursor, donor_id, data):
             ID_FRECUENCIA,
             ID_TIPO_FRECUENCIA,
             PAGO_UNICO,
+            ID_LINEA_ESTRATEGICA,
+            ID_ASIGNACION,
             ID_ESTATUS,
             FECHA_ALTA
         )
         OUTPUT INSERTED.ID_DONATIVO
-        VALUES (?, ?, ?, ?, ?, ?, ?, SYSDATETIME())
+        VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?, SYSDATETIME())
     """, (
         donor_id,
         importe,
