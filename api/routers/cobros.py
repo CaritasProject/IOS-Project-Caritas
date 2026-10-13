@@ -21,34 +21,96 @@ def base_no_disponible(_):
     return error("La base de datos no está disponible. Intenta de nuevo.", 503)
 
 
-@bp.get("")
+CONSULTA_COBROS = """
+    SELECT b.ID_BITACORA, b.FECHA_COBRO, b.IMPORTE, e.NOMBRE AS ESTATUS,
+           v.HORA_ACORDADA, v.CALLE, v.COLONIA, m.NOMBRE AS MUNICIPIO,
+           o.NOMBRE, o.A_PATERNO, o.A_MATERNO, o.RAZON_SOCIAL,
+           fp.NOMBRE AS FORMA_PAGO
+    FROM dbo.OPE_BITACORA_PAGOS_DONATIVOS b
+    JOIN dbo.VISITA_RECOLECCION v ON v.ID_BITACORA = b.ID_BITACORA
+    JOIN dbo.CAT_MUNICIPIO m ON m.ID_MUNICIPIO = v.ID_MUNICIPIO
+    JOIN dbo.CAT_ESTATUS_PAGO e ON e.ID_ESTATUS_PAGO = b.ESTATUS_PAGO
+    JOIN dbo.OPE_DONATIVOS_DONANTE d ON d.ID_DONATIVO = b.ID_DONATIVO
+    JOIN dbo.OPE_DONANTES o ON o.ID_DONANTE = d.ID_DONANTE
+    JOIN dbo.CAT_FORMA_PAGO fp ON fp.ID_FORMA_PAGO = d.ID_FORMA_PAGO
+"""
+
+
+def cobro_a_json(fila) -> dict:
+    if fila.RAZON_SOCIAL:
+        donante = fila.RAZON_SOCIAL
+    else:
+        donante = f"{fila.NOMBRE} {fila.A_PATERNO} {fila.A_MATERNO or ''}".strip()
+
+    return {
+        "id": fila.ID_BITACORA,
+        "fecha": fila.FECHA_COBRO.isoformat(),
+        "hora": fila.HORA_ACORDADA.strftime("%H:%M"),
+        "donante": donante,
+        "direccion": f"{fila.CALLE}, {fila.COLONIA}, {fila.MUNICIPIO.title()}",
+        "importe": float(fila.IMPORTE),
+        "formaPago": fila.FORMA_PAGO.capitalize(),
+        "estatus": fila.ESTATUS,
+    }
+
+
+@bp.get("/pendientes")
 @requiere_rol("RECOLECTOR")
-def listar_cobros():
+def listar_pendientes():
     cursor = obtener_conexion().cursor()
     cursor.execute(
-        """SELECT b.ID_BITACORA, b.IMPORTE, v.HORA_ACORDADA, v.CALLE, v.COLONIA,
-                  m.NOMBRE AS MUNICIPIO, fp.NOMBRE AS FORMA_PAGO,
-                  COALESCE(o.RAZON_SOCIAL, CONCAT_WS(' ', o.NOMBRE, o.A_PATERNO, o.A_MATERNO)) AS DONANTE
-           FROM dbo.VISITA_RECOLECCION v
-           JOIN dbo.OPE_BITACORA_PAGOS_DONATIVOS b ON b.ID_BITACORA = v.ID_BITACORA
-           JOIN dbo.CAT_ESTATUS_PAGO e ON e.ID_ESTATUS_PAGO = b.ESTATUS_PAGO
-           JOIN dbo.CAT_MUNICIPIO m ON m.ID_MUNICIPIO = v.ID_MUNICIPIO
+        CONSULTA_COBROS
+        + """ WHERE e.NOMBRE = N'PENDIENTE'
+              ORDER BY b.FECHA_COBRO, v.HORA_ACORDADA""")
+    return jsonify([cobro_a_json(fila) for fila in cursor.fetchall()])
+
+
+@bp.get("/<int:id_cobro>")
+@requiere_rol("RECOLECTOR")
+def consultar_cobro(id_cobro: int):
+    cursor = obtener_conexion().cursor()
+    cursor.execute(CONSULTA_COBROS + " WHERE b.ID_BITACORA = ?", id_cobro)
+    fila = cursor.fetchone()
+    if fila is None:
+        return error(f"No existe el cobro {id_cobro}.", 404)
+    return jsonify(cobro_a_json(fila))
+
+
+@bp.get("/<int:id_cobro>/historial")
+@requiere_rol("RECOLECTOR")
+def consultar_historial(id_cobro: int):
+    cursor = obtener_conexion().cursor()
+    cursor.execute(
+        """SELECT d.ID_DONANTE
+           FROM dbo.OPE_BITACORA_PAGOS_DONATIVOS b
            JOIN dbo.OPE_DONATIVOS_DONANTE d ON d.ID_DONATIVO = b.ID_DONATIVO
-           JOIN dbo.CAT_FORMA_PAGO fp ON fp.ID_FORMA_PAGO = d.ID_FORMA_PAGO
-           JOIN dbo.OPE_DONANTES o ON o.ID_DONANTE = d.ID_DONANTE
-           WHERE e.NOMBRE = N'PENDIENTE'
-           ORDER BY b.FECHA_COBRO, v.HORA_ACORDADA""")
-    cobros = []
+           WHERE b.ID_BITACORA = ?""",
+        id_cobro)
+    cobro = cursor.fetchone()
+    if cobro is None:
+        return error(f"No existe el cobro {id_cobro}.", 404)
+
+    cursor.execute(
+        """SELECT TOP 5 b.ID_BITACORA, b.FECHA_COBRO, b.FECHA_PAGO, b.IMPORTE, b.IMPORTE_COBRADO,
+                  e.NOMBRE AS ESTATUS
+           FROM dbo.OPE_BITACORA_PAGOS_DONATIVOS b
+           JOIN dbo.OPE_DONATIVOS_DONANTE d ON d.ID_DONATIVO = b.ID_DONATIVO
+           JOIN dbo.CAT_ESTATUS_PAGO e ON e.ID_ESTATUS_PAGO = b.ESTATUS_PAGO
+           WHERE d.ID_DONANTE = ? AND b.ID_BITACORA <> ?
+           ORDER BY b.FECHA_COBRO DESC, b.ID_BITACORA DESC""",
+        cobro.ID_DONANTE, id_cobro)
+
+    pagos = []
     for fila in cursor.fetchall():
-        cobros.append({
+        pagos.append({
             "id": fila.ID_BITACORA,
-            "hora": fila.HORA_ACORDADA.strftime("%H:%M"),
-            "donante": fila.DONANTE,
-            "direccion": f"{fila.CALLE}, {fila.COLONIA}, {fila.MUNICIPIO}",
+            "fechaCobro": fila.FECHA_COBRO.isoformat(),
+            "fechaPago": fila.FECHA_PAGO.isoformat() if fila.FECHA_PAGO else None,
             "importe": float(fila.IMPORTE),
-            "formaPago": fila.FORMA_PAGO.capitalize(),
+            "importeCobrado": float(fila.IMPORTE_COBRADO),
+            "estatus": fila.ESTATUS,
         })
-    return jsonify(cobros)
+    return jsonify(pagos)
 
 
 @bp.post("/<int:id_cobro>/visita")
