@@ -30,6 +30,7 @@ DELETE FROM dbo.CAT_FORMATO_REPORTE;
 DELETE FROM dbo.CAT_TIPO_REPORTE;
 DELETE FROM dbo.META;
 DELETE FROM dbo.VISITA_RECOLECCION;
+DELETE FROM dbo.LLAMADA_PROGRAMADA;
 DELETE FROM dbo.REGISTRO_LLAMADA;
 DELETE FROM dbo.OPE_BITACORA_PAGOS_DONATIVOS;
 DELETE FROM dbo.OPE_DONATIVOS_DONANTE;
@@ -208,17 +209,17 @@ SET IDENTITY_INSERT dbo.USUARIO OFF;
    1 a 8: prototipo aprobado · 9 y 10: prueba de los niveles amarillo y rojo
 ============================================================================= */
 SET IDENTITY_INSERT dbo.OPE_DONANTES ON;
-INSERT INTO dbo.OPE_DONANTES (ID_DONANTE, NOMBRE, A_PATERNO, A_MATERNO, RAZON_SOCIAL, ID_TIPO_DONANTE, ID_CLASIFICACION, FECHA_ALTA, ESTATUS_DONANTE) VALUES
-    (1, N'María Elena', N'Treviño', NULL, NULL, 1, 3, '2018-03-01', N'ACTIVO'),
-    (2, NULL, NULL, NULL, N'Grupo Industrial Ánimas', 4, 3, '2015-01-01', N'ACTIVO'),
-    (3, N'Jorge Alberto', N'Sandoval', NULL, NULL, 1, 3, '2021-09-01', N'ACTIVO'),
-    (4, NULL, NULL, NULL, N'Fundación Sierra Madre', 2, 3, '2012-05-01', N'ACTIVO'),
-    (5, N'Ana Sofía', N'Villarreal', NULL, NULL, 1, 3, '2023-02-01', N'ACTIVO'),
-    (6, N'Roberto', N'Cárdenas', N'Lozano', NULL, 1, 3, '2019-08-01', N'ACTIVO'),
-    (7, NULL, NULL, NULL, N'Comercializadora del Norte', 4, 3, '2017-10-01', N'ACTIVO'),
-    (8, N'Guadalupe', N'Ramírez', NULL, NULL, 1, 3, '2020-07-01', N'INACTIVO'),
-    (9, N'Patricia', N'Garza', N'Leal', NULL, 1, 3, '2026-01-10', N'INACTIVO'),
-    (10, N'Luis Fernando', N'Medina', NULL, NULL, 1, 3, '2025-06-10', N'INACTIVO');
+INSERT INTO dbo.OPE_DONANTES (ID_DONANTE, NOMBRE, A_PATERNO, A_MATERNO, RAZON_SOCIAL, TELEFONO, ID_TIPO_DONANTE, ID_CLASIFICACION, FECHA_ALTA, ESTATUS_DONANTE) VALUES
+    (1, N'María Elena', N'Treviño', NULL, NULL, N'81 8345 1290', 1, 3, '2018-03-01', N'ACTIVO'),
+    (2, NULL, NULL, NULL, N'Grupo Industrial Ánimas', N'81 8150 2200', 4, 3, '2015-01-01', N'ACTIVO'),
+    (3, N'Jorge Alberto', N'Sandoval', NULL, NULL, N'81 1234 5678', 1, 3, '2021-09-01', N'ACTIVO'),
+    (4, NULL, NULL, NULL, N'Fundación Sierra Madre', N'81 8335 9000', 2, 3, '2012-05-01', N'ACTIVO'),
+    (5, N'Ana Sofía', N'Villarreal', NULL, NULL, N'81 8456 7781', 1, 3, '2023-02-01', N'ACTIVO'),
+    (6, N'Roberto', N'Cárdenas', N'Lozano', NULL, N'81 8378 2201', 1, 3, '2019-08-01', N'ACTIVO'),
+    (7, NULL, NULL, NULL, N'Comercializadora del Norte', N'81 8123 4410', 4, 3, '2017-10-01', N'ACTIVO'),
+    (8, N'Guadalupe', N'Ramírez', NULL, NULL, N'81 1655 0932', 1, 3, '2020-07-01', N'INACTIVO'),
+    (9, N'Patricia', N'Garza', N'Leal', NULL, N'81 2034 5517', 1, 3, '2026-01-10', N'INACTIVO'),
+    (10, N'Luis Fernando', N'Medina', NULL, NULL, N'81 1987 6620', 1, 3, '2025-06-10', N'INACTIVO');
 SET IDENTITY_INSERT dbo.OPE_DONANTES OFF;
 
 /* =============================================================================
@@ -366,6 +367,19 @@ INSERT INTO dbo.REGISTRO_LLAMADA (ID_DONANTE, ID_USUARIO, FECHA_LLAMADA, RESULTA
     (6, 2, '2026-08-05 10:00:00', N'Sin respuesta', N'Primer intento'),
     (7, 4, '2026-08-19 10:00:00', N'Contabilidad reprograma pago', NULL),
     (8, 5, '2026-04-15 10:00:00', N'Solicitó pausar su donativo', NULL);
+
+INSERT INTO dbo.LLAMADA_PROGRAMADA (ID_DONANTE, ID_USUARIO, FECHA, MOTIVO) VALUES
+    (3, 2, CAST(GETDATE() AS DATE), N'Confirmar cobro'),
+    (9, 2, CAST(GETDATE() AS DATE), N'Renovar compromiso'),
+    (7, 2, CAST(GETDATE() AS DATE), N'Confirmar cobro'),
+    (6, 2, CAST(GETDATE() AS DATE), N'Actualizar forma de pago'),
+    (1, 2, CAST(GETDATE() AS DATE), N'Actualizar forma de pago'),
+    (5, 2, CAST(GETDATE() AS DATE), N'Confirmar cobro'),
+    (8, 2, CAST(GETDATE() AS DATE), N'Renovar compromiso');
+
+INSERT INTO dbo.REGISTRO_LLAMADA (ID_DONANTE, ID_USUARIO, FECHA_LLAMADA, RESULTADO, COMENTARIOS) VALUES
+    (5, 2, SYSDATETIME(), N'PROMESA', NULL),
+    (8, 2, SYSDATETIME(), N'NO_CONTESTO', NULL);
 
 /* =============================================================================
    METAS del trimestre julio–septiembre 2026 (montos del prototipo)
