@@ -52,8 +52,9 @@ def cobro_a_json(fila) -> dict:
         "formaPago": fila.FORMA_PAGO.capitalize(),
         "estatus": fila.ESTATUS,
     }
+    
 
-
+@bp.get("")
 @bp.get("/pendientes")
 @requiere_rol("RECOLECTOR")
 def listar_pendientes():
