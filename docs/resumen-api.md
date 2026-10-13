@@ -84,3 +84,22 @@ Environment Variables:
 con `pyodbc`, el endpoint responde 503 y la pantalla muestra esa alerta. Las
 consultas SQL ya están escritas contra el esquema real y no dependen de ese
 cambio.
+
+## Registro de llamadas (iPhone)
+
+`routers/llamadas.py` usa la conexión compartida y exige JWT con rol `TELEFONISTA`:
+
+- `GET /llamadas/donantes/<id>` devuelve `{id, nombre}`; conserva la ficha existente de `/donantes/<id>`.
+- `GET /llamadas/form-options` devuelve `formas_pago`, `frecuencias` y `tipos_frecuencia`.
+- `POST /donantes/<id>/llamadas` recibe `resultado` (`PROMESA`, `NO_CONTESTO`, `RECHAZO`), `comentarios` opcionales y `compromiso` para promesas.
+
+El compromiso contiene `importe`, `id_forma_pago`, `pago_unico` y, si es recurrente,
+`id_frecuencia` e `id_tipo_frecuencia`. La respuesta 201 contiene `id_llamada` e
+`id_donativo` (null sin promesa). Llamada y compromiso se guardan en una transacción.
+`ID_USUARIO` se obtiene de `g.usuario["id"]`, nunca del cuerpo de la petición.
+
+Pruebas sin conexión a SQL Server, desde `api/`:
+
+```sh
+python -m unittest discover -s tests -v
+```
