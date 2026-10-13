@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
     <key>API_BASE_URL</key>
-    <string>http://10.14.255.42:10206</string>
+    <string>https://losjamones.tc2007b.tec.mx:10206</string>
     <key>NSAppTransportSecurity</key>
     <dict>
         <key>NSAllowsLocalNetworking</key>

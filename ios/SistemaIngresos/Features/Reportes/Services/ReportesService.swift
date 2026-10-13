@@ -1,6 +1,6 @@
 import Foundation
 
-let urlBaseAPI = "http://10.14.255.42:10206"
+let urlBaseAPI = "https://losjamones.tc2007b.tec.mx:10206"
 
 func obtenerReportes() async throws -> [Reporte] {
     guard let url = URL(string: "\(urlBaseAPI)/reportes") else {
