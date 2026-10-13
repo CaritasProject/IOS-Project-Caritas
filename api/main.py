@@ -3,6 +3,7 @@ from flask import Flask
 from core.config import configuracion
 from core.db import cerrar_conexion
 from routers.auth import bp as bp_auth
+from routers.cobros import bp as bp_cobros
 from routers.donantes import bp as bp_donantes
 from routers.metas import bp as bp_metas
 from routers.reportes import bp as bp_reportes
@@ -24,6 +25,7 @@ def crear_app() -> Flask:
     app.register_blueprint(bp_reportes)
     app.register_blueprint(bp_metas)
     app.register_blueprint(bp_visitas)
+    app.register_blueprint(bp_cobros)
 
     @app.get("/salud")
     def salud():
