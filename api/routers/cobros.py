@@ -21,6 +21,36 @@ def base_no_disponible(_):
     return error("La base de datos no está disponible. Intenta de nuevo.", 503)
 
 
+@bp.get("")
+@requiere_rol("RECOLECTOR")
+def listar_cobros():
+    cursor = obtener_conexion().cursor()
+    cursor.execute(
+        """SELECT b.ID_BITACORA, b.IMPORTE, v.HORA_ACORDADA, v.CALLE, v.COLONIA,
+                  m.NOMBRE AS MUNICIPIO, fp.NOMBRE AS FORMA_PAGO,
+                  COALESCE(o.RAZON_SOCIAL, CONCAT_WS(' ', o.NOMBRE, o.A_PATERNO, o.A_MATERNO)) AS DONANTE
+           FROM dbo.VISITA_RECOLECCION v
+           JOIN dbo.OPE_BITACORA_PAGOS_DONATIVOS b ON b.ID_BITACORA = v.ID_BITACORA
+           JOIN dbo.CAT_ESTATUS_PAGO e ON e.ID_ESTATUS_PAGO = b.ESTATUS_PAGO
+           JOIN dbo.CAT_MUNICIPIO m ON m.ID_MUNICIPIO = v.ID_MUNICIPIO
+           JOIN dbo.OPE_DONATIVOS_DONANTE d ON d.ID_DONATIVO = b.ID_DONATIVO
+           JOIN dbo.CAT_FORMA_PAGO fp ON fp.ID_FORMA_PAGO = d.ID_FORMA_PAGO
+           JOIN dbo.OPE_DONANTES o ON o.ID_DONANTE = d.ID_DONANTE
+           WHERE e.NOMBRE = N'PENDIENTE'
+           ORDER BY b.FECHA_COBRO, v.HORA_ACORDADA""")
+    cobros = []
+    for fila in cursor.fetchall():
+        cobros.append({
+            "id": fila.ID_BITACORA,
+            "hora": fila.HORA_ACORDADA.strftime("%H:%M"),
+            "donante": fila.DONANTE,
+            "direccion": f"{fila.CALLE}, {fila.COLONIA}, {fila.MUNICIPIO}",
+            "importe": float(fila.IMPORTE),
+            "formaPago": fila.FORMA_PAGO.capitalize(),
+        })
+    return jsonify(cobros)
+
+
 @bp.post("/<int:id_cobro>/visita")
 @requiere_rol("RECOLECTOR")
 def registrar_visita(id_cobro: int):
