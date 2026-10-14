@@ -1,7 +1,11 @@
+import hashlib
+import hmac
+
 from flask import Blueprint, g, jsonify, request
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from core.auth import crear_token, requiere_rol, requiere_sesion
+from core.config import configuracion
 from core.db import obtener_conexion
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
@@ -32,6 +36,11 @@ def buscar_rol(cursor, id_o_nombre):
     return None
 
 
+# El pepper vive en el .env, no en la base: si se roban la tabla USUARIO, los hashes no sirven sin él.
+def con_pepper(password: str) -> str:
+    return hmac.new(configuracion.pepper.encode(), password.encode(), hashlib.sha256).hexdigest()
+
+
 def correo_registrado(cursor, correo: str) -> bool:
     cursor.execute("SELECT ID_USUARIO FROM dbo.USUARIO WHERE LOWER(CORREO) = ?", correo)
     return cursor.fetchone() is not None
@@ -44,7 +53,7 @@ def insertar_usuario(cursor, nombre: str, correo: str, password: str, id_rol: in
         OUTPUT INSERTED.ID_USUARIO
         VALUES (?, ?, ?, ?, ?)
         """,
-        nombre, correo, generate_password_hash(password), id_rol, area,
+        nombre, correo, generate_password_hash(con_pepper(password)), id_rol, area,
     )
     return cursor.fetchone()[0]
 
@@ -73,7 +82,7 @@ def login():
     cursor.execute(CONSULTA_USUARIOS + " WHERE LOWER(u.CORREO) = ?", correo)
     fila = cursor.fetchone()
 
-    credenciales_validas = fila is not None and check_password_hash(fila.CONTRASENA_HASH, password)
+    credenciales_validas = fila is not None and check_password_hash(fila.CONTRASENA_HASH, con_pepper(password))
     if not credenciales_validas:
         return error("Correo o contraseña incorrectos.", 401)
 

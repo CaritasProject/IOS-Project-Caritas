@@ -11,7 +11,7 @@ Equipo 3 "Los Jamones". API en `https://losjamones.tc2007b.tec.mx:10206`.
 | Código seguro: Bandit | Hecho: de 8 hallazgos (1 alto) a 1 medio que es un falso positivo documentado | [evidencias/bandit-antes.txt](evidencias/bandit-antes.txt), [evidencias/bandit-despues.txt](evidencias/bandit-despues.txt) |
 | Código seguro: OWASP ZAP | Hecho: sin hallazgos altos ni medios; queda 1 bajo (header `Server`, riesgo R10) | [evidencias/zap.html](evidencias/zap.html), [evidencias/zap-primer-escaneo.html](evidencias/zap-primer-escaneo.html) |
 | Mínimo privilegio: usuario SQL acotado al esquema | Hecho: `api_caritas` con solo `SELECT/INSERT/UPDATE/DELETE` sobre `dbo` | [../../db/03_usuario_api.sql](../../db/03_usuario_api.sql), [evidencias/usuario-sql.txt](evidencias/usuario-sql.txt) |
-| Hashes / SALT | Hecho: scrypt con sal aleatoria por usuario (`werkzeug.security.generate_password_hash`) | `api/routers/auth.py` |
+| Hashes / SALT-PEPPER | Hecho: scrypt con sal aleatoria por usuario (`werkzeug.security.generate_password_hash`) y pepper: antes del hash la contraseña se mezcla con HMAC-SHA256 y un secreto de 64 caracteres que vive en el `.env`, no en la base | `api/routers/auth.py` (`con_pepper`) |
 | JWT y control de sesiones | Hecho: HS256, secreto de 64 caracteres fuera del repo, vigencia de 8 horas, roles por ruta, límite de 5 logins fallidos por minuto por IP | `api/core/auth.py`, `api/main.py` |
 | Radar de riesgos (10 o más) | Hecho: 12 riesgos | [radar-riesgos.md](radar-riesgos.md) |
 
