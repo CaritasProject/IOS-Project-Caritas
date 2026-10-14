@@ -5,7 +5,7 @@ Equipo 3 "Los Jamones". API en `https://losjamones.tc2007b.tec.mx:10206`.
 | Requisito | Estado | Dónde está |
 |---|---|---|
 | Diseño de integración (tabla de flujos y diagrama) | Hecho | [diseno-integracion.md](diseno-integracion.md) |
-| Capa 4: ufw | Hecho en el contenedor de la API: `deny` por defecto, solo entran 22, 10206 y Tailscale. SQL Server está en un contenedor del curso que no administramos (ver R8) | [evidencias/ufw.txt](evidencias/ufw.txt) |
+| Capa 4: ufw | Hecho en el contenedor de la API: `deny` por defecto, solo entran 22 (SSH), 10206 (API) y dos puertos UDP de administración (123 y 41641). SQL Server está en un contenedor del curso que no administramos (ver R8) | [evidencias/ufw.txt](evidencias/ufw.txt) |
 | Capa 5: SSL / HTTPS | Hecho: certificado de la CA del curso, solo TLS 1.2 y 1.3 (TLS 1.0 y 1.1 se rechazan) | `flask run --cert --key` en el contenedor |
 | Código seguro: security headers | Hecho en `api/main.py` (`agregar_encabezados`): HSTS, `nosniff`, `X-Frame-Options`, CSP, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Resource-Policy`, `Cache-Control: no-store` | [../../api/main.py](../../api/main.py) |
 | Código seguro: Bandit | Hecho: de 8 hallazgos (1 alto) a 1 medio que es un falso positivo documentado | [evidencias/bandit-antes.txt](evidencias/bandit-antes.txt), [evidencias/bandit-despues.txt](evidencias/bandit-despues.txt) |

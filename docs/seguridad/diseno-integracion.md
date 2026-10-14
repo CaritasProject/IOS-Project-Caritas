@@ -9,7 +9,6 @@
 | API REST (Flask) | Contenedor del equipo, `https://losjamones.tc2007b.tec.mx:10206` | Las dos apps |
 | SQL Server 2022, base `caritas` | Contenedor `sql_server` del curso, puerto 1433 | Solo la API (y el equipo para administrar) |
 | ufw | Contenedor de la API | Filtra lo que entra al contenedor |
-| Tailscale | Contenedor de la API y equipos del equipo | Acceso de administración fuera del campus |
 
 ## Diagrama
 
@@ -33,7 +32,7 @@ flowchart LR
     IPAD -- "F1, F4: HTTPS/TLS 1.2+ :10206<br/>Bearer JWT" --> API
     IPHONE -- "F2, F3, F4: HTTPS/TLS 1.2+ :10206<br/>Bearer JWT" --> API
     API -- "F5: TDS cifrado :1433<br/>login api_caritas (solo DML en dbo)" --> DB
-    ADMIN -- "F6: SSH :22<br/>red del Tec o Tailscale" --> CONT
+    ADMIN -- "F6: SSH :22<br/>red del Tec" --> CONT
     ADMIN -- "F7: túnel SSH + SA<br/>solo administración" --> DB
 ```
 
@@ -46,7 +45,7 @@ flowchart LR
 | F3 | App iPhone (Recolector) → API | HTTPS, TCP 10206 | JWT con rol `RECOLECTOR` | Cobros pendientes, historial, resultado de la visita | `@requiere_rol("RECOLECTOR")`; validación con Pydantic; un cobro solo se registra una vez (409) |
 | F4 | Apps → `POST /auth/login` | HTTPS, TCP 10206 | Correo y contraseña | Credenciales de ida; JWT y datos del usuario de regreso | Contraseñas con scrypt y sal (werkzeug); JWT HS256 de 8 horas; 5 intentos fallidos por minuto por IP (luego 429) |
 | F5 | API → SQL Server | TDS, TCP 1433 (`Encrypt=yes`) | Login `api_caritas` | Consultas y escrituras de filas | Mínimo privilegio: solo `SELECT/INSERT/UPDATE/DELETE` sobre `dbo`; credenciales en `.env` con permisos 600, fuera de git |
-| F6 | Equipo → contenedor de la API | SSH, TCP 22 | Usuario y contraseña del contenedor | Despliegues, logs | ufw solo deja entrar 22, 10206 y los puertos de Tailscale; fuera del campus solo por Tailscale |
+| F6 | Equipo → contenedor de la API | SSH, TCP 22 | Usuario y contraseña del contenedor | Despliegues, logs | ufw solo deja entrar SSH (22), la API (10206) y dos puertos UDP de administración (123 y 41641) |
 | F7 | Equipo → SQL Server | TDS por túnel SSH | `SA` | Esquema, cargas de datos, respaldos | SA no lo usa la API; sus credenciales viven en un archivo aparte (permisos 600) que solo leen los scripts de administración |
 
 ## Rutas de la API por rol
