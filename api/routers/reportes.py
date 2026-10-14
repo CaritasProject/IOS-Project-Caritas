@@ -41,7 +41,8 @@ FILTRO_ALCANCE = """
                                           WHERE ac.ID_REPORTE = h.ID_REPORTE))
 """
 
-CONSULTA_REPORTES = """
+CONSULTA_REPORTES = (
+"""
 SELECT h.ID_REPORTE, t.NOMBRE AS TIPO_REPORTE, h.FECHA_DESDE, h.FECHA_HASTA,
        f.NOMBRE AS FORMATO, h.FECHA_GENERACION, m.COMPROMETIDO, m.COBRADO
 FROM dbo.HISTORIAL_REPORTE h
@@ -52,10 +53,12 @@ CROSS APPLY (
            ISNULL(SUM(b.IMPORTE_COBRADO), 0) AS COBRADO
     FROM dbo.OPE_BITACORA_PAGOS_DONATIVOS b
     JOIN dbo.OPE_DONATIVOS_DONANTE d ON d.ID_DONATIVO = b.ID_DONATIVO
-    WHERE b.FECHA_COBRO BETWEEN h.FECHA_DESDE AND h.FECHA_HASTA""" + FILTRO_ALCANCE + """) m
-"""
+    WHERE b.FECHA_COBRO BETWEEN h.FECHA_DESDE AND h.FECHA_HASTA"""  # nosec B608: solo une fragmentos fijos; los valores van con ?
+    + FILTRO_ALCANCE + """) m
+""")
 
-CONSULTA_COBROS = """
+CONSULTA_COBROS = (
+"""
 SELECT b.ID_BITACORA, b.FECHA_COBRO, b.FECHA_VENCIMIENTO, b.FECHA_PAGO,
        COALESCE(o.RAZON_SOCIAL, CONCAT_WS(N' ', o.NOMBRE, o.A_PATERNO, o.A_MATERNO)) AS DONANTE,
        le.NOMBRE AS LINEA, a.NOMBRE AS ASIGNACION, c.NOMBRE AS CAMPANA, fp.NOMBRE AS FORMA_PAGO,
@@ -69,9 +72,10 @@ JOIN dbo.CAT_ASIGNACION a               ON a.ID_ASIGNACION = d.ID_ASIGNACION
 LEFT JOIN dbo.CAT_CAMPANA_FINANCIERA c  ON c.ID_CAMPANA_FINANCIERA = d.ID_CAMPANA_FINANCIERA
 JOIN dbo.CAT_FORMA_PAGO fp              ON fp.ID_FORMA_PAGO = d.ID_FORMA_PAGO
 JOIN dbo.CAT_ESTATUS_PAGO ep            ON ep.ID_ESTATUS_PAGO = b.ESTATUS_PAGO
-WHERE h.ID_REPORTE = ?""" + FILTRO_ALCANCE + """
+WHERE h.ID_REPORTE = ?"""  # nosec B608: solo une fragmentos fijos; los valores van con ?
+    + FILTRO_ALCANCE + """
 ORDER BY b.FECHA_COBRO, b.ID_BITACORA
-"""
+""")
 
 CONSULTA_LLAMADAS = """
 SELECT r.ID_LLAMADA, r.FECHA_LLAMADA,
@@ -147,10 +151,10 @@ def fila_a_json(fila) -> dict:
 def buscar_en_catalogo(cursor, tabla: str, columna_id: str, nombre: str, etiqueta: str):
     if nombre.strip().upper() in ("", "TODAS", "TODOS"):
         return None
-    cursor.execute(f"SELECT {columna_id} FROM dbo.{tabla} WHERE NOMBRE = ?", nombre.strip())
+    cursor.execute(f"SELECT {columna_id} FROM dbo.{tabla} WHERE NOMBRE = ?", nombre.strip())  # nosec B608: tabla y columna fijas
     fila = cursor.fetchone()
     if fila is None:
-        cursor.execute(f"SELECT NOMBRE FROM dbo.{tabla} ORDER BY NOMBRE")
+        cursor.execute(f"SELECT NOMBRE FROM dbo.{tabla} ORDER BY NOMBRE")  # nosec B608: tabla fija
         opciones = ", ".join(["Todas"] + [f.NOMBRE for f in cursor.fetchall()])
         raise LookupError(f"{etiqueta} '{nombre}' no existe. Opciones: {opciones}")
     return fila[0]
@@ -298,7 +302,7 @@ TIPOS_MIME = {"pdf": "application/pdf",
 def alcance(cursor, id_reporte: int, tabla: str, catalogo: str, columna_id: str) -> str:
     cursor.execute(f"""SELECT c.NOMBRE FROM dbo.{tabla} a
                        JOIN dbo.{catalogo} c ON c.{columna_id} = a.{columna_id}
-                       WHERE a.ID_REPORTE = ? ORDER BY c.NOMBRE""", id_reporte)
+                       WHERE a.ID_REPORTE = ? ORDER BY c.NOMBRE""", id_reporte)  # nosec B608: tablas fijas
     nombres = [f.NOMBRE for f in cursor.fetchall()]
     return ", ".join(nombres) if nombres else "Todas"
 

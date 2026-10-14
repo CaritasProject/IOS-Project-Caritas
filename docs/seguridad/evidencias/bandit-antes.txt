@@ -1,0 +1,126 @@
+Run started:2026-10-14 04:36:18.277664+00:00
+
+Test results:
+>> Issue: [B201:flask_debug_true] A Flask app appears to be run with debug=True, which exposes the Werkzeug debugger and allows the execution of arbitrary code.
+   Severity: High   Confidence: Medium
+   CWE: CWE-94 (https://cwe.mitre.org/data/definitions/94.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b201_flask_debug_true.html
+   Location: .\main.py:52:4
+51	    # misma red también pueda conectarse, no solo el simulador.
+52	    app.run(host="0.0.0.0", port=configuracion.api_puerto, debug=True)
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: .\main.py:52:17
+51	    # misma red también pueda conectarse, no solo el simulador.
+52	    app.run(host="0.0.0.0", port=configuracion.api_puerto, debug=True)
+
+--------------------------------------------------
+>> Issue: [B608:hardcoded_sql_expressions] Possible SQL injection vector through string-based query construction.
+   Severity: Medium   Confidence: Low
+   CWE: CWE-89 (https://cwe.mitre.org/data/definitions/89.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html
+   Location: .\routers\reportes.py:44:20
+43	
+44	CONSULTA_REPORTES = """
+45	SELECT h.ID_REPORTE, t.NOMBRE AS TIPO_REPORTE, h.FECHA_DESDE, h.FECHA_HASTA,
+46	       f.NOMBRE AS FORMATO, h.FECHA_GENERACION, m.COMPROMETIDO, m.COBRADO
+47	FROM dbo.HISTORIAL_REPORTE h
+48	JOIN dbo.CAT_TIPO_REPORTE t    ON t.ID_TIPO_REPORTE = h.ID_TIPO_REPORTE
+49	JOIN dbo.CAT_FORMATO_REPORTE f ON f.ID_FORMATO = h.ID_FORMATO
+50	CROSS APPLY (
+51	    SELECT ISNULL(SUM(b.IMPORTE), 0)         AS COMPROMETIDO,
+52	           ISNULL(SUM(b.IMPORTE_COBRADO), 0) AS COBRADO
+53	    FROM dbo.OPE_BITACORA_PAGOS_DONATIVOS b
+54	    JOIN dbo.OPE_DONATIVOS_DONANTE d ON d.ID_DONATIVO = b.ID_DONATIVO
+55	    WHERE b.FECHA_COBRO BETWEEN h.FECHA_DESDE AND h.FECHA_HASTA""" + FILTRO_ALCANCE + """) m
+56	"""
+
+--------------------------------------------------
+>> Issue: [B608:hardcoded_sql_expressions] Possible SQL injection vector through string-based query construction.
+   Severity: Medium   Confidence: Low
+   CWE: CWE-89 (https://cwe.mitre.org/data/definitions/89.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html
+   Location: .\routers\reportes.py:58:18
+57	
+58	CONSULTA_COBROS = """
+59	SELECT b.ID_BITACORA, b.FECHA_COBRO, b.FECHA_VENCIMIENTO, b.FECHA_PAGO,
+60	       COALESCE(o.RAZON_SOCIAL, CONCAT_WS(N' ', o.NOMBRE, o.A_PATERNO, o.A_MATERNO)) AS DONANTE,
+61	       le.NOMBRE AS LINEA, a.NOMBRE AS ASIGNACION, c.NOMBRE AS CAMPANA, fp.NOMBRE AS FORMA_PAGO,
+62	       b.IMPORTE, b.IMPORTE_COBRADO, ep.NOMBRE AS ESTATUS
+63	FROM dbo.HISTORIAL_REPORTE h
+64	JOIN dbo.OPE_BITACORA_PAGOS_DONATIVOS b ON b.FECHA_COBRO BETWEEN h.FECHA_DESDE AND h.FECHA_HASTA
+65	JOIN dbo.OPE_DONATIVOS_DONANTE d        ON d.ID_DONATIVO = b.ID_DONATIVO
+66	JOIN dbo.OPE_DONANTES o                 ON o.ID_DONANTE = d.ID_DONANTE
+67	JOIN dbo.CAT_LINEA_ESTRATEGICA le       ON le.ID_LINEA_ESTRATEGICA = d.ID_LINEA_ESTRATEGICA
+68	JOIN dbo.CAT_ASIGNACION a               ON a.ID_ASIGNACION = d.ID_ASIGNACION
+69	LEFT JOIN dbo.CAT_CAMPANA_FINANCIERA c  ON c.ID_CAMPANA_FINANCIERA = d.ID_CAMPANA_FINANCIERA
+70	JOIN dbo.CAT_FORMA_PAGO fp              ON fp.ID_FORMA_PAGO = d.ID_FORMA_PAGO
+71	JOIN dbo.CAT_ESTATUS_PAGO ep            ON ep.ID_ESTATUS_PAGO = b.ESTATUS_PAGO
+72	WHERE h.ID_REPORTE = ?""" + FILTRO_ALCANCE + """
+73	ORDER BY b.FECHA_COBRO, b.ID_BITACORA
+
+--------------------------------------------------
+>> Issue: [B608:hardcoded_sql_expressions] Possible SQL injection vector through string-based query construction.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-89 (https://cwe.mitre.org/data/definitions/89.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html
+   Location: .\routers\reportes.py:150:21
+149	        return None
+150	    cursor.execute(f"SELECT {columna_id} FROM dbo.{tabla} WHERE NOMBRE = ?", nombre.strip())
+151	    fila = cursor.fetchone()
+
+--------------------------------------------------
+>> Issue: [B608:hardcoded_sql_expressions] Possible SQL injection vector through string-based query construction.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-89 (https://cwe.mitre.org/data/definitions/89.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html
+   Location: .\routers\reportes.py:153:25
+152	    if fila is None:
+153	        cursor.execute(f"SELECT NOMBRE FROM dbo.{tabla} ORDER BY NOMBRE")
+154	        opciones = ", ".join(["Todas"] + [f.NOMBRE for f in cursor.fetchall()])
+
+--------------------------------------------------
+>> Issue: [B608:hardcoded_sql_expressions] Possible SQL injection vector through string-based query construction.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-89 (https://cwe.mitre.org/data/definitions/89.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html
+   Location: .\routers\reportes.py:299:23
+298	def alcance(cursor, id_reporte: int, tabla: str, catalogo: str, columna_id: str) -> str:
+299	    cursor.execute(f"""SELECT c.NOMBRE FROM dbo.{tabla} a
+300	                       JOIN dbo.{catalogo} c ON c.{columna_id} = a.{columna_id}
+301	                       WHERE a.ID_REPORTE = ? ORDER BY c.NOMBRE""", id_reporte)
+302	    nombres = [f.NOMBRE for f in cursor.fetchall()]
+
+--------------------------------------------------
+>> Issue: [B608:hardcoded_sql_expressions] Possible SQL injection vector through string-based query construction.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-89 (https://cwe.mitre.org/data/definitions/89.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html
+   Location: .\services\call_service.py:171:10
+170	    cursor.execute(
+171	        f"SELECT 1 FROM {table} WHERE {column} = ?",
+172	        value
+
+--------------------------------------------------
+
+Code scanned:
+	Total lines of code: 2186
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 0
+		Medium: 7
+		High: 1
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 2
+		Medium: 6
+		High: 0
+Files skipped (0):

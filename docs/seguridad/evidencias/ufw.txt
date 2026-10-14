@@ -1,0 +1,23 @@
+$ date
+Tue Oct 13 22:38:44 CST 2026
+
+$ sudo ufw status verbose
+Status: active
+Logging: on (low)
+Default: deny (incoming), allow (outgoing), deny (routed)
+New profiles: skip
+
+To                         Action      From
+--                         ------      ----
+22/tcp                     ALLOW IN    Anywhere                  
+10206/tcp                  ALLOW IN    Anywhere                  
+123/udp                    ALLOW IN    Anywhere                  
+41641/udp                  ALLOW IN    Anywhere                  
+
+$ ss -tln (puertos escuchando)
+LISTEN 0      4096                    127.0.0.11:43309      0.0.0.0:*          
+LISTEN 0      4096                 127.0.0.53%lo:53         0.0.0.0:*          
+LISTEN 0      128                        0.0.0.0:22         0.0.0.0:*          
+LISTEN 0      128                        0.0.0.0:10206      0.0.0.0:*          
+LISTEN 0      128                           [::]:22            [::]:*          
+

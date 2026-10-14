@@ -1,0 +1,30 @@
+Prueba del login api_caritas (13/10/2026 22:34, desde el contenedor de la API)
+
+Conectado como api_caritas:
+  USER_NAME()                 = api_caritas
+  IS_SRVROLEMEMBER(sysadmin)  = 0
+  IS_ROLEMEMBER(db_owner)     = 0
+  IS_ROLEMEMBER(db_ddladmin)  = 0
+  SELECT COUNT(*) FROM dbo.USUARIO = 10   (lectura permitida)
+
+Operaciones que no debe poder hacer (cada una dentro de BEGIN TRAN ... ROLLBACK):
+  CREATE TABLE dbo.PRUEBA_PERMISOS  -> denegado: CREATE TABLE permission denied in database 'caritas'
+  DROP TABLE dbo.META               -> denegado: Cannot drop the table 'META', because it does not exist or you do not have permission
+  ALTER TABLE dbo.USUARIO ADD X     -> denegado: Cannot find the object "USUARIO" because it does not exist or you do not have permissions
+  SELECT ... FROM alumno01.sys.tables -> denegado: The server principal "api_caritas" is not able to access the database "alumno01"
+  BACKUP DATABASE caritas           -> denegado: BACKUP DATABASE permission denied in database 'caritas'
+
+Copia de la API con SQLSERVER_USUARIO=api_caritas (puerto 10299, solo localhost), 39 de 40 pasos como se esperaba
+(el que falló fue del script de prueba: pidió /resumen/kpis/anio y la ruta es /resumen/kpis/ano):
+  login de administrador, telefonista y recolector                      200
+  iPad: perfil, usuarios, resumen, metas, donantes, reportes, municipios 200
+  POST /reportes                                                        201
+  /reportes/<id>/datos y /archivo en PDF, Excel y CSV                   200
+  Telefonista: opciones, historial, llamada NO_CONTESTO y PROMESA       200 / 201
+  Telefonista: compromiso y POST /visitas                               200 / 201
+  Recolector: /cobros, /cobros/pendientes, detalle, historial            200
+  Recolector: POST /cobros/<id>/visita (UPDATE)                         200
+  Sin token / rol equivocado                                            401 / 403
+  Security headers en la respuesta                                      presentes
+  6 logins fallidos seguidos                                            401 x5, 429
+Los registros creados por la prueba se borraron después con SA.

@@ -1,0 +1,31 @@
+Run started:2026-10-14 04:36:18.882216+00:00
+
+Test results:
+>> Issue: [B608:hardcoded_sql_expressions] Possible SQL injection vector through string-based query construction.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-89 (https://cwe.mitre.org/data/definitions/89.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html
+   Location: .\services\call_service.py:171:10
+170	    cursor.execute(
+171	        f"SELECT 1 FROM {table} WHERE {column} = ?",
+172	        value
+
+--------------------------------------------------
+
+Code scanned:
+	Total lines of code: 2224
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 5
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 0
+		Medium: 1
+		High: 0
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 1
+		High: 0
+Files skipped (0):
