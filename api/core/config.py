@@ -18,7 +18,7 @@ class Configuracion(BaseSettings):
 
     jwt_secreto: str = ""
     jwt_algoritmo: str = "HS256"
-    jwt_minutos_expiracion: int = 480
+    jwt_minutos_expiracion: int = 43200
 
     pepper: str = ""
 
