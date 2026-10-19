@@ -41,7 +41,7 @@ struct LoginView: View {
             }
             .padding(.bottom, 8)
 
-            Text("Correo institucional")
+            Text("Correo")
                 .font(.system(size: 13))
             TextField("nombre@caritas.org.mx", text: $correo)
                 .textInputAutocapitalization(.never)
