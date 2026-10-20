@@ -28,15 +28,8 @@ def nombre_donante(fila):
     return f"{fila.NOMBRE} {fila.A_PATERNO} {fila.A_MATERNO or ''}".strip()
 
 
-def iniciales(nombre):
-    letras = ""
-    for palabra in nombre.replace(".", " ").split():
-        letras = letras + palabra[0].upper()
-    return letras[:2]
-
-
-@bp.get("/hoy")
-def llamadas_de_hoy():
+@bp.get("/pendientes")
+def llamadas_pendientes():
     usuario = usuario_del_token()
     if usuario is None:
         return error("No autorizado. Inicia sesión.", 401)
@@ -44,12 +37,6 @@ def llamadas_de_hoy():
         return error("No tienes permiso para esta acción.", 403)
 
     cursor = obtener_conexion().cursor()
-
-    cursor.execute("SELECT NOMBRE FROM dbo.USUARIO WHERE ID_USUARIO = ?", usuario["id"])
-    telefonista = cursor.fetchone()
-    if telefonista is None:
-        return error("El usuario ya no existe.", 404)
-
     cursor.execute(
         """SELECT p.ID_PROGRAMADA, p.MOTIVO, d.ID_DONANTE, d.NOMBRE, d.A_PATERNO, d.A_MATERNO,
                   d.RAZON_SOCIAL, d.TELEFONO
@@ -63,9 +50,9 @@ def llamadas_de_hoy():
                                AND CAST(r.FECHA_LLAMADA AS DATE) >= p.FECHA)
            ORDER BY p.FECHA, p.ID_PROGRAMADA""",
         usuario["id"])
-    por_llamar = []
+    pendientes = []
     for fila in cursor.fetchall():
-        por_llamar.append({
+        pendientes.append({
             "id": fila.ID_PROGRAMADA,
             "idDonante": fila.ID_DONANTE,
             "donante": nombre_donante(fila),
@@ -73,6 +60,18 @@ def llamadas_de_hoy():
             "motivo": fila.MOTIVO,
         })
 
+    return jsonify(pendientes)
+
+
+@bp.get("/contactados")
+def llamadas_contactadas():
+    usuario = usuario_del_token()
+    if usuario is None:
+        return error("No autorizado. Inicia sesión.", 401)
+    if usuario["rol"] != "TELEFONISTA":
+        return error("No tienes permiso para esta acción.", 403)
+
+    cursor = obtener_conexion().cursor()
     cursor.execute(
         """SELECT r.ID_LLAMADA, r.RESULTADO, d.ID_DONANTE, d.NOMBRE, d.A_PATERNO, d.A_MATERNO,
                   d.RAZON_SOCIAL, d.TELEFONO
@@ -92,8 +91,44 @@ def llamadas_de_hoy():
             "resultado": RESULTADOS.get(fila.RESULTADO, fila.RESULTADO),
         })
 
-    return jsonify({
-        "iniciales": iniciales(telefonista.NOMBRE),
-        "porLlamar": por_llamar,
-        "contactados": contactados,
-    })
+    return jsonify(contactados)
+
+
+@bp.put("/programadas/<int:id_programada>")
+def reprogramar_llamada(id_programada):
+    usuario = usuario_del_token()
+    if usuario is None:
+        return error("No autorizado. Inicia sesión.", 401)
+    if usuario["rol"] != "TELEFONISTA":
+        return error("No tienes permiso para esta acción.", 403)
+
+    conexion = obtener_conexion()
+    cursor = conexion.cursor()
+
+    cursor.execute(
+        "SELECT ID_DONANTE, FECHA FROM dbo.LLAMADA_PROGRAMADA WHERE ID_PROGRAMADA = ? AND ID_USUARIO = ?",
+        id_programada, usuario["id"])
+    programada = cursor.fetchone()
+    if programada is None:
+        return error("La llamada programada no existe.", 404)
+
+    cursor.execute(
+        """SELECT TOP 1 RESULTADO
+           FROM dbo.REGISTRO_LLAMADA
+           WHERE ID_DONANTE = ?
+             AND ID_USUARIO = ?
+             AND CAST(FECHA_LLAMADA AS DATE) >= ?
+           ORDER BY FECHA_LLAMADA DESC""",
+        programada.ID_DONANTE, usuario["id"], programada.FECHA)
+    llamada = cursor.fetchone()
+    if llamada is None:
+        return error("Todavía no registras la llamada a este donante.", 400)
+    if llamada.RESULTADO != "NO_CONTESTO":
+        return error("Solo se reprograman las llamadas que no contestaron.", 400)
+
+    cursor.execute(
+        "UPDATE dbo.LLAMADA_PROGRAMADA SET FECHA = DATEADD(DAY, 1, CAST(GETDATE() AS DATE)) WHERE ID_PROGRAMADA = ?",
+        id_programada)
+    conexion.commit()
+
+    return jsonify({"id": id_programada, "mensaje": "La llamada se reprogramó para mañana."})
