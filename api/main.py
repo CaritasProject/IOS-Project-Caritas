@@ -6,6 +6,7 @@ from core.config import configuracion
 from core.db import cerrar_conexion
 from routers.auth import bp as bp_auth
 from routers.cobros import bp as bp_cobros
+from routers.cobros_del_dia import bp as bp_cobros_del_dia
 from routers.donantes import bp as bp_donantes
 from routers.llamadas import bp as bp_llamadas
 from routers.llamadas_del_dia import bp as bp_llamadas_del_dia
@@ -47,6 +48,7 @@ def crear_app() -> Flask:
     app.register_blueprint(bp_llamadas)
     app.register_blueprint(bp_llamadas_del_dia)
     app.register_blueprint(bp_cobros)
+    app.register_blueprint(bp_cobros_del_dia)
 
     @app.before_request
     def limitar_intentos_de_login():
